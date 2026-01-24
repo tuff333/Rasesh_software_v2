@@ -1,0 +1,22 @@
+{
+    "theme": "light",
+    "upload_folder": "redaction",
+    "ocr_default": false,
+    "zoom_mode": "fit-width",
+    "show_tips": true,
+    "output_redactions": "output/redactions",
+    "output_invoices": "output/invoices",
+    "output_manifests": "output/manifests",
+    "shortcuts": {
+        "prev_page": "ArrowLeft",
+        "next_page": "ArrowRight",
+        "undo": "Ctrl+Z",
+        "clear": "Delete",
+        "apply": "Ctrl+S",
+        "zoom_in": "Ctrl+Plus",
+        "zoom_out": "Ctrl+Minus",
+        "zoom_reset": "Ctrl+0",
+        "toggle_thumbs": "Ctrl+Shift+W",
+        "toggle_ocr": "Ctrl+Shift+O"
+    }
+}
