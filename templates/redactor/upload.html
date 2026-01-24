@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="card shadow">
+  <div class="card-header text-white" style="background:#27AAE1;">
+    <h5><i class="bi bi-file-pdf"></i> PDF Redaction Tool</h5>
+  </div>
+
+  <div class="card-body">
+
+    <!-- Upload options -->
+    <div class="mb-3 d-flex align-items-center">
+      <div class="form-check form-switch me-3">
+        <input class="form-check-input" type="checkbox" id="uploadToRedaction" checked>
+        <label class="form-check-label" for="uploadToRedaction">
+          Save uploads in <b>Redaction</b> folder
+        </label>
+      </div>
+    </div>
+
+    <!-- Upload Area -->
+    <div class="upload-area" id="uploadArea">
+      <i class="bi bi-cloud-upload" style="font-size: 48px; color: #27AAE1;"></i>
+      <h5>Drag & Drop PDF Here</h5>
+      <p>or</p>
+
+      <!-- Hidden file input -->
+      <input type="file" id="pdfUpload" accept=".pdf" style="display:none;">
+
+      <button class="btn btn-primary"
+              onclick="document.getElementById('pdfUpload').click()">
+        Browse Files
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const uploadArea = document.getElementById('uploadArea');
+const fileInput  = document.getElementById('pdfUpload');
+const uploadSwitch = document.getElementById('uploadToRedaction');
+
+// Handle browse upload
+fileInput.addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (file) uploadPDF(file);
+});
+
+// Drag over highlight
+uploadArea.addEventListener('dragover', e => {
+  e.preventDefault();
+  uploadArea.style.background = '#e6f5fc';
+});
+
+// Remove highlight
+uploadArea.addEventListener('dragleave', () => {
+  uploadArea.style.background = '';
+});
+
+// Handle drop
+uploadArea.addEventListener('drop', e => {
+  e.preventDefault();
+  uploadArea.style.background = '';
+  const file = e.dataTransfer.files[0];
+  if (file) uploadPDF(file);
+});
+
+// Upload function
+function uploadPDF(file) {
+  if (file.type !== 'application/pdf') {
+    alert('Please upload a PDF file.');
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append('pdf', file);
+
+  // Decide module based on switch
+  const module = uploadSwitch.checked ? 'redaction' : 'default';
+
+  fetch(`/redactor/upload?module=${encodeURIComponent(module)}`, {
+    method: 'POST',
+    body: formData
+  })
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        window.location.href = `/redactor/viewer/${data.filename}`;
+      } else {
+        alert('Upload failed: ' + data.error);
+      }
+    })
+    .catch(() => alert('Upload failed.'));
+}
+</script>
+
+{% endblock %}

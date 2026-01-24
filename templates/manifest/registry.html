@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<!-- ============================================================
+     MANIFEST REGISTRY
+     - Lists all manifests
+     - Blue theme table
+     - Links to preview + PDF download
+   ============================================================ -->
+
+<div class="card shadow">
+  <div class="card-header text-white" style="background:#27AAE1;">
+    <h5><i class="bi bi-truck"></i> Manifest Registry</h5>
+  </div>
+
+  <div class="card-body">
+
+    <div class="d-flex justify-content-between mb-3">
+      <h6 class="mt-2">All Manifests</h6>
+      <a href="{{ url_for('manifest_create') }}" class="btn btn-success">
+        + New Manifest
+      </a>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-hover">
+        <thead class="table-dark">
+          <tr>
+            <th>Manifest #</th>
+            <th>Date</th>
+            <th>Carrier</th>
+            <th>Ship From</th>
+            <th>Ship To</th>
+            <th>Weight</th>
+            <th></th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {% for m in manifests %}
+          <tr>
+            <td><b>{{ m['num'] }}</b></td>
+            <td>{{ m['date'] }}</td>
+            <td>{{ m['carrier'] or '-' }}</td>
+            <td>{{ m['ship_from'] }}</td>
+            <td>{{ m['ship_to'] }}</td>
+            <td>{{ m['weight'] }} g</td>
+
+            <td>
+              <a class="btn btn-sm btn-outline-primary"
+                 href="{{ url_for('manifest_preview', id=m['id']) }}">
+                Preview
+              </a>
+
+              {% if m['pdf'] %}
+              <a class="btn btn-sm btn-outline-success"
+                 href="{{ m['pdf'] }}">
+                PDF
+              </a>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+
+      </table>
+    </div>
+
+  </div>
+</div>
+
+{% endblock %}

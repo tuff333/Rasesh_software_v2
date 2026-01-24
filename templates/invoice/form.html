@@ -1,0 +1,181 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="card shadow">
+  <div class="card-header text-white" style="background:#27AAE1;">
+    <h5><i class="bi bi-receipt"></i> Create Invoice</h5>
+  </div>
+
+  <div class="card-body">
+
+    <form method="POST">
+
+      <!-- Invoice Meta -->
+      <div class="row mb-3">
+        <div class="col-md-3">
+          <label class="form-label">Invoice Type</label>
+          <select name="invoice_type" class="form-select" required>
+            <option value="Invoice">Invoice</option>
+            <option value="Estimate">Estimate</option>
+            <option value="Quote">Quote</option>
+          </select>
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label">Invoice Date</label>
+          <input type="date" name="invoice_date" class="form-control" required>
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label">Vendor</label>
+          <select name="vendor_id" class="form-select" required>
+            <option value="">Select Vendor</option>
+            {% for v in vendors %}
+            <option value="{{ v[0] }}">{{ v[1] }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label">GST Number</label>
+          <select name="gst_number" class="form-select">
+            <option value="">None</option>
+            {% for g in gst_numbers %}
+            <option value="{{ g[1] }}">{{ g[1] }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <!-- Shipping Info -->
+      <div class="row mb-3">
+        <div class="col-md-4">
+          <label class="form-label">Shipping Method</label>
+          <input type="text" name="ship_method" class="form-control">
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label">Shipping Terms</label>
+          <input type="text" name="ship_terms" class="form-control">
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label">Delivery Date</label>
+          <input type="date" name="delivery_date" class="form-control">
+        </div>
+      </div>
+
+      <!-- Comments + Terms -->
+      <div class="mb-3">
+        <label class="form-label">Comments</label>
+        <textarea name="comments" class="form-control" rows="2"></textarea>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Terms & Conditions</label>
+        <textarea name="terms_conditions" class="form-control" rows="2"></textarea>
+      </div>
+
+      <!-- Signature / Template -->
+      <div class="row mb-3">
+        <div class="col-md-4">
+          <label class="form-label">Signature</label>
+          <select name="sig_id" class="form-select">
+            <option value="">None</option>
+            {% if signatures %}
+              {% for s in signatures %}
+              <option value="{{ s[0] }}">{{ s[1] }} – {{ s[2] }}</option>
+              {% endfor %}
+            {% endif %}
+          </select>
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label">Template</label>
+          <select name="template" class="form-select">
+            <option value="classic">Classic</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Line Items -->
+      <div class="card mb-3">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <b>Line Items</b>
+          <button type="button" class="btn btn-sm btn-primary" id="addItem">+ Add</button>
+        </div>
+
+        <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+          <table class="table table-sm" id="itemsTable">
+            <thead>
+              <tr>
+                <th>Lot #</th>
+                <th>Item</th>
+                <th>Qty</th>
+                <th>Units</th>
+                <th>Unit Price</th>
+                <th>Line Total</th>
+                <th></th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr>
+                <td><input type="text" name="lot_number[]" class="form-control"></td>
+                <td><input type="text" name="item[]" class="form-control"></td>
+                <td><input type="number" name="qty[]" class="form-control qty" step="0.01"></td>
+                <td>
+                  <select name="units[]" class="form-select">
+                    <option>Grams</option>
+                    <option>kg</option>
+                    <option>Units</option>
+                  </select>
+                </td>
+                <td><input type="number" name="unit_price[]" class="form-control price" step="0.01"></td>
+                <td><input type="text" class="form-control line-total" readonly></td>
+                <td><button type="button" class="btn btn-sm btn-danger removeItem">×</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Totals -->
+      <div class="row mb-3">
+        <div class="col-md-3">
+          <label class="form-label">Subtotal</label>
+          <input type="text" id="subtotal" name="subtotal" class="form-control" readonly>
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label">Tax Rate (%)</label>
+          <input type="number" name="tax_rate" id="tax_rate" class="form-control" value="13" step="0.01">
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label">Shipping Cost</label>
+          <input type="number" name="ship_cost" id="ship_cost" class="form-control" value="0" step="0.01">
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label">Grand Total</label>
+          <input type="text" id="grand_total" name="total" class="form-control" readonly>
+        </div>
+      </div>
+
+      <!-- Hidden tax field for backend -->
+      <input type="hidden" name="tax" id="tax_hidden">
+
+      <!-- Submit -->
+      <div class="text-center">
+        <button type="submit" class="btn btn-success me-2">Create Invoice & PDF</button>
+      </div>
+
+    </form>
+
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/invoice.js') }}"></script>
+
+{% endblock %}

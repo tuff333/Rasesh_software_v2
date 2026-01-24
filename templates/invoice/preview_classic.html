@@ -1,0 +1,80 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Invoice {{ invoice['num'] }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/print.css') }}">
+</head>
+
+<body>
+
+  <div class="hdr">
+    <h2>PURCHASE ORDER – {{ invoice['num'] }}</h2>
+  </div>
+
+  <div class="flex-between">
+    <div>
+      <h5>BILL TO</h5>
+      <p>{{ invoice['ca'] or 'Medicine Wheel Ranch Inc.<br>443 North Russell Road, Russell, ON K4R 1E5' }}</p>
+    </div>
+
+    <div>
+      <h5>SHIP TO</h5>
+      <p>Medicine Wheel Ranch Inc.<br>9-2020 Lanthier Dr, Suite 236, Orleans, ON K4A 3V4</p>
+    </div>
+  </div>
+
+  <p>
+    <b>Vendor:</b> {{ invoice['vn'] }} |
+    <b>PO #:</b> {{ invoice['num'] }} |
+    <b>Date:</b> {{ invoice['date'] }}
+  </p>
+
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Lot #</th>
+        <th>Item</th>
+        <th>Qty</th>
+        <th>Units</th>
+        <th>Unit Price</th>
+        <th>Total</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      {% for it in items %}
+      <tr>
+        <td>{{ it.lot }}</td>
+        <td>{{ it.item }}</td>
+        <td>{{ it.qty }}</td>
+        <td>{{ it.units }}</td>
+        <td>${{ "%.2f"|format(it.price) }}</td>
+        <td>${{ "%.2f"|format(it.total) }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div class="totals">
+    <div class="row"><span>Subtotal:</span><span>${{ "%.2f"|format(invoice.sub) }}</span></div>
+    <div class="row"><span>Tax ({{ invoice.tax_rate }}%):</span><span>${{ "%.2f"|format(invoice.tax) }}</span></div>
+    <div class="row"><span>Shipping:</span><span>${{ "%.2f"|format(invoice.ship_cost) }}</span></div>
+    <hr>
+    <div class="row total"><b>Grand Total:</b><b>${{ "%.2f"|format(invoice.total) }}</b></div>
+  </div>
+
+  {% if invoice.simg and invoice.simg != 'None' %}
+  <div class="sig">
+    <img src="{{ invoice.simg }}" class="sig-img">
+    <br>{{ invoice.sn }} – {{ invoice.sp }}
+  </div>
+  {% endif %}
+
+  <div class="no-print">
+    <a href="javascript:window.print()" class="btn btn-primary me-2">Print</a>
+    <a href="{{ url_for('invoice_download',id=invoice.id) }}" class="btn btn-success">Download PDF</a>
+  </div>
+
+</body>
+</html>

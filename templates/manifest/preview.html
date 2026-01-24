@@ -1,0 +1,71 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Manifest {{ manifest['num'] }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/print.css') }}">
+</head>
+
+<body>
+
+  <div class="hdr">
+    <h2>CANNABIS TRANSFER MANIFEST – {{ manifest['num'] }}</h2>
+  </div>
+
+  <div class="section-title">Manifest Details</div>
+  <div class="info-box">
+    <b>Date:</b> {{ manifest['date'] }}<br>
+    <b>Carrier:</b> {{ manifest['carrier'] or '-' }}<br>
+    <b>Delivery Date:</b> {{ manifest['delivery'] or '-' }}
+  </div>
+
+  <div class="section-title">Shipped From</div>
+  <div class="info-box">{{ manifest['ship_from'] }}</div>
+
+  <div class="section-title">Shipped To</div>
+  <div class="info-box">{{ manifest['ship_to'] }}</div>
+
+  <div class="section-title">Items</div>
+
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Item</th>
+        <th>Lot #</th>
+        <th>Weight (g)</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      {% for it in items %}
+      <tr>
+        <td>{{ it.item }}</td>
+        <td>{{ it.lot }}</td>
+        <td>{{ it.weight }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div class="totals">
+    <div class="row total">
+      <span>Total Weight:</span>
+      <span>{{ total_weight }} g</span>
+    </div>
+  </div>
+
+  <div class="sig">
+    <b>Signature:</b><br>
+    {% if manifest.sig_img %}
+      <img src="{{ manifest.sig_img }}" class="sig-img">
+    {% else %}
+      <i>No signature</i>
+    {% endif %}
+  </div>
+
+  <div class="no-print">
+    <a href="javascript:window.print()" class="btn btn-primary me-2">Print</a>
+  </div>
+
+</body>
+</html>

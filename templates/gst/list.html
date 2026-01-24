@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="card shadow">
+  <div class="card-header text-white" style="background:#27AAE1;">
+    <h5><i class="bi bi-hash"></i> GST Numbers</h5>
+  </div>
+
+  <div class="card-body">
+
+    <form method="POST" class="d-flex mb-3">
+      <input type="text" name="gst" class="form-control me-2" placeholder="Add GST number..." required>
+      <button class="btn btn-primary">Add</button>
+    </form>
+
+    <div class="table-responsive">
+      <table class="table table-hover">
+        <thead class="table-dark">
+          <tr>
+            <th>GST Number</th>
+            <th></th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {% for g in gst %}
+          <tr>
+            <td>{{ g[1] }}</td>
+            <td>
+              <form method="POST"
+                    action="{{ url_for('gst.gst_delete', id=g[0]) }}"
+                    onsubmit="return confirm('Delete this GST number?');">
+                <button class="btn btn-sm btn-danger">Delete</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+
+      </table>
+    </div>
+
+  </div>
+</div>
+
+{% endblock %}

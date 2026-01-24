@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<!-- ============================================================
+     MANIFEST CREATION FORM
+     - Blue theme
+     - Dynamic line items
+     - Matches backend fields exactly
+   ============================================================ -->
+
+<div class="card shadow">
+  <div class="card-header text-white" style="background:#27AAE1;">
+    <h5><i class="bi bi-truck"></i> Create Manifest</h5>
+  </div>
+
+  <div class="card-body">
+
+    <form method="POST">
+
+      <!-- Manifest Info -->
+      <div class="row mb-3">
+        <div class="col-md-4">
+          <label class="form-label">Manifest Date</label>
+          <input type="date" name="manifest_date" class="form-control" value="{{ today }}" required>
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label">Carrier</label>
+          <input type="text" name="carrier" class="form-control" placeholder="Carrier name">
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label">Delivery Date</label>
+          <input type="date" name="delivery_date" class="form-control">
+        </div>
+      </div>
+
+      <!-- Ship From / Ship To -->
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <label class="form-label">Shipped From</label>
+          <textarea name="ship_from" class="form-control" rows="3" required></textarea>
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Shipped To</label>
+          <textarea name="ship_to" class="form-control" rows="3" required></textarea>
+        </div>
+      </div>
+
+      <!-- Contact -->
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <label class="form-label">Contact Name</label>
+          <input type="text" name="contact_name" class="form-control" placeholder="Receiver / Responsible person">
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Shipping Method</label>
+          <input type="text" name="ship_method" class="form-control" placeholder="e.g. Ground, Air, Courier">
+        </div>
+      </div>
+
+      <!-- Signature -->
+      <div class="row mb-3">
+        <div class="col-md-4">
+          <label class="form-label">Signature</label>
+          <select name="sig_id" class="form-select">
+            <option value="">None</option>
+            {% for s in signatures %}
+            <option value="{{ s[0] }}">{{ s[1] }} – {{ s[2] }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <!-- Line Items -->
+      <div class="card mb-3">
+        <div class="card-header">
+          <b>Line Items</b>
+          <button type="button" class="btn btn-sm btn-primary" id="addItem">+ Add</button>
+        </div>
+
+        <div class="card-body">
+          <table class="table table-sm" id="itemsTable">
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th>Lot #</th>
+                <th>Weight (g)</th>
+                <th></th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr>
+                <td><input type="text" name="item" class="form-control" required></td>
+                <td><input type="text" name="lot_number" class="form-control" required></td>
+                <td><input type="number" name="weight" class="form-control" step="0.01" required></td>
+                <td><button type="button" class="btn btn-sm btn-danger removeItem">×</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Submit -->
+      <div class="text-center">
+        <button type="submit" class="btn btn-success me-2">Create Manifest & PDF</button>
+      </div>
+
+    </form>
+
+  </div>
+</div>
+
+<!-- Dynamic row JS -->
+<script>
+document.getElementById('addItem').onclick = () => {
+  const tbody = document.querySelector('#itemsTable tbody');
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td><input type="text" name="item" class="form-control" required></td>
+    <td><input type="text" name="lot_number" class="form-control" required></td>
+    <td><input type="number" name="weight" class="form-control" step="0.01" required></td>
+    <td><button type="button" class="btn btn-sm btn-danger removeItem">×</button></td>
+  `;
+  tbody.appendChild(tr);
+};
+
+document.addEventListener('click', e => {
+  if (e.target.classList.contains('removeItem')) {
+    e.target.closest('tr').remove();
+  }
+});
+</script>
+
+{% endblock %}

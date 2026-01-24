@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<!-- ============================================================
+     INVOICE REGISTRY
+     - Search bar
+     - Blue theme table
+     - Preview + PDF + Duplicate + Delete
+   ============================================================ -->
+
+<div class="card shadow">
+  <div class="card-header text-white" style="background:#27AAE1;">
+    <h5><i class="bi bi-receipt"></i> Invoice Registry</h5>
+  </div>
+
+  <div class="card-body">
+
+    <!-- Search + Add -->
+    <div class="d-flex justify-content-between mb-3">
+      <form method="get" class="d-flex">
+        <input type="text"
+               name="search"
+               class="form-control me-2"
+               placeholder="Search invoice # or vendor..."
+               value="{{ search }}">
+        <button class="btn btn-primary">Search</button>
+      </form>
+
+      <a href="{{ url_for('invoice_create') }}" class="btn btn-success">
+        + New Invoice
+      </a>
+    </div>
+
+    <!-- Invoice Table -->
+    <div class="table-responsive">
+      <table class="table table-hover">
+        <thead class="table-dark">
+          <tr>
+            <th>Invoice #</th>
+            <th>Date</th>
+            <th>Vendor</th>
+            <th>Subtotal</th>
+            <th>Total</th>
+            <th></th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {% for inv in invoices %}
+          <tr>
+            <td><b>{{ inv['num'] }}</b></td>
+            <td>{{ inv['date'] }}</td>
+            <td>{{ inv['vn'] or '-' }}</td>
+            <td>${{ "%.2f"|format(inv['sub']) }}</td>
+            <td>${{ "%.2f"|format(inv['total']) }}</td>
+
+            <td>
+              <a class="btn btn-sm btn-outline-primary"
+                 href="{{ url_for('invoice_preview', id=inv['id']) }}">
+                Preview
+              </a>
+
+              {% if inv['pdf'] %}
+              <a class="btn btn-sm btn-outline-success"
+                 href="{{ url_for('invoice_download', id=inv['id']) }}">
+                PDF
+              </a>
+              {% endif %}
+
+              <a class="btn btn-sm btn-outline-secondary"
+                 href="{{ url_for('invoice_duplicate', id=inv['id']) }}">
+                Duplicate
+              </a>
+
+              <form method="POST"
+                    action="{{ url_for('invoice_delete', id=inv['id']) }}"
+                    style="display:inline;"
+                    onsubmit="return confirm('Delete this invoice?');">
+                <button class="btn btn-sm btn-outline-danger">
+                  Delete
+                </button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+
+      </table>
+    </div>
+
+  </div>
+</div>
+
+{% endblock %}

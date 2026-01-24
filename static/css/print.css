@@ -1,0 +1,77 @@
+/* ============================================================
+   PRINT / PDF STYLES FOR INVOICE + MANIFEST
+   ============================================================ */
+
+body {
+  font-family: Arial, sans-serif;
+  margin: 20px;
+}
+
+.hdr {
+  background: #27AAE1;
+  color: #fff;
+  padding: 15px;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.flex-between {
+  display: flex;
+  justify-content: space-between;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.table th {
+  background: #27AAE1;
+  color: #fff;
+  padding: 8px;
+}
+
+.table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+}
+
+.totals {
+  margin-top: 20px;
+  width: 300px;
+  margin-left: auto;
+}
+
+.totals .row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 5px;
+}
+
+.totals .total {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.sig {
+  margin-top: 40px;
+}
+
+.sig-img {
+  max-width: 200px;
+}
+
+.no-print {
+  margin-top: 30px;
+  text-align: center;
+}
+
+@media print {
+  .no-print {
+    display: none;
+  }
+  body {
+    margin: 0;
+  }
+}

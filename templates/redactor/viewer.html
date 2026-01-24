@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div id="workspace">
+
+  <!-- Open Documents Sidebar -->
+  <div id="sidebar">
+    <h6>Open Documents</h6>
+    <div id="docList"></div>
+  </div>
+
+  <!-- Thumbnails Sidebar -->
+  <div id="thumbSidebar" class="thumb-collapsed">
+    <div class="thumb-header">
+      <span>Pages</span>
+      <button id="thumbToggle" class="btn btn-sm btn-outline-primary">☰</button>
+    </div>
+    <div id="thumbList"></div>
+  </div>
+
+  <!-- Main Viewer -->
+  <div style="flex:1;">
+
+    <!-- Modern Toolbar -->
+    <div id="viewerToolbar">
+
+      <!-- Page Navigation -->
+      <div class="toolbar-group">
+        <button class="btn btn-sm btn-outline-primary" id="prevPage" title="Previous Page">
+          <i class="bi bi-arrow-left"></i>
+        </button>
+
+        <button class="btn btn-sm btn-outline-primary" id="nextPage" title="Next Page">
+          <i class="bi bi-arrow-right"></i>
+        </button>
+
+        <span class="page-indicator">
+          Page <span id="pageNum">1</span> / <span id="pageCount">1</span>
+        </span>
+      </div>
+
+      <!-- Zoom Controls -->
+      <div class="toolbar-group">
+        <button class="btn btn-sm btn-outline-secondary" id="zoomOut" title="Zoom Out">
+          <i class="bi bi-zoom-out"></i>
+        </button>
+
+        <button class="btn btn-sm btn-outline-secondary" id="zoomIn" title="Zoom In">
+          <i class="bi bi-zoom-in"></i>
+        </button>
+
+        <button class="btn btn-sm btn-outline-secondary" id="zoomReset" title="Reset Zoom">
+          <i class="bi bi-aspect-ratio"></i>
+        </button>
+
+        <button class="btn btn-sm btn-outline-secondary" id="zoomFitWidth" title="Fit to Width">
+          <i class="bi bi-arrows-expand"></i>
+        </button>
+
+        <button class="btn btn-sm btn-outline-secondary" id="zoomFitPage" title="Fit to Page">
+          <i class="bi bi-fullscreen"></i>
+        </button>
+      </div>
+
+      <!-- OCR Toggle -->
+      <div class="toolbar-group">
+        <div class="form-check form-switch">
+          <input class="form-check-input" type="checkbox" id="ocrToggle">
+          <label class="form-check-label" for="ocrToggle">OCR</label>
+        </div>
+      </div>
+
+      <!-- Redaction Controls -->
+      <div class="toolbar-group">
+        <button class="btn btn-sm btn-info" id="previewAll" title="Preview All Pages">
+          <i class="bi bi-grid"></i> Preview
+        </button>
+
+        <button class="btn btn-sm btn-success" id="applyPreview" title="Apply Redactions">
+          <i class="bi bi-check2-circle"></i> Apply
+        </button>
+
+        <button class="btn btn-sm btn-secondary" id="undoBtn" title="Undo Last">
+          <i class="bi bi-arrow-counterclockwise"></i>
+        </button>
+
+        <button class="btn btn-sm btn-danger" id="clearBtn" title="Clear All">
+          <i class="bi bi-trash"></i>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- PDF Viewer -->
+    <div id="viewer" class="viewer-frame">
+      <canvas id="pdfCanvas"></canvas>
+      <div id="overlay"></div>
+    </div>
+
+        <!-- PDF Viewer -->
+    <div id="viewer" class="viewer-frame">
+      <canvas id="pdfCanvas"></canvas>
+      <div id="overlay"></div>
+    </div>
+
+    <!-- Tips Bar -->
+    <div id="viewerTips" class="viewer-tips mt-2"></div>
+
+    <hr>
+
+    <hr>
+
+    <h6>AI Suggestions</h6>
+    <div id="suggestions"></div>
+
+  </div>
+
+</div>
+
+<!-- ============================================================
+     MULTI-PAGE PREVIEW MODAL
+     ============================================================ -->
+<div class="modal fade" id="previewModal" tabindex="-1">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title">Redaction Preview (All Pages)</h5>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body" id="previewPages"></div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button class="btn btn-success" id="applyPreviewFromModal">
+          Apply Redactions
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  window.filename = "{{ filename }}";
+</script>
+
+<script src="{{ url_for('static', filename='js/redactor.js') }}"></script>
+
+{% endblock %}

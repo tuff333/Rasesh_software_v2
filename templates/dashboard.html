@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="card shadow text-center">
+  <div class="card-header text-white" style="background:#27AAE1;"><h4><i class="bi bi-speedometer2"></i> Dashboard</h4></div>
+  <div class="card-body">
+    <div class="row mt-4">
+      <div class="col-md-3 mb-3"><div class="card bg-info text-white"><div class="card-body"><h5>Invoices</h5><h2>{{ monthly_invoices }}</h2><p>This Month</p><h4>{{ total_invoices }} Total</h4><a class="btn btn-light btn-sm" href="{{ url_for('invoice_registry') }}">Registry</a></div></div></div>
+      <div class="col-md-3 mb-3"><div class="card bg-danger text-white"><div class="card-body"><h5>Redactions</h5><h2>{{ monthly_redactions }}</h2><p>This Month</p><a class="btn btn-light btn-sm" href="{{ url_for('redactor_upload') }}">Redactor</a></div></div></div>
+      <div class="col-md-3 mb-3"><div class="card bg-success text-white"><div class="card-body"><h5>Manifests</h5><h2>{{ monthly_manifests }}</h2><p>This Month</p><a class="btn btn-light btn-sm" href="{{ url_for('manifest_registry') }}">Registry</a></div></div></div>
+      <div class="col-md-3 mb-3"><div class="card bg-warning text-dark"><div class="card-body"><h5>Contacts</h5><h2>{{ total_contacts }}</h2><p>Total</p><a class="btn btn-light btn-sm" href="{{ url_for('contacts_list') }}">List</a></div></div></div>
+    </div>
+    <div class="row mt-4">
+      <div class="col-md-12">
+        <div class="alert alert-info">
+          <h5><i class="bi bi-info-circle"></i> Quick Actions</h5>
+          <a href="{{ url_for('invoice_create') }}" class="btn btn-primary me-2">Create Invoice</a>
+          <a href="{{ url_for('manifest_create') }}" class="btn btn-success me-2">Create Manifest</a>
+          <a href="{{ url_for('contacts_add') }}" class="btn btn-warning">Add Contact</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

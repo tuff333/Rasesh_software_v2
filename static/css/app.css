@@ -1,0 +1,353 @@
+/* Rasesh IM PDF CRM – Blue Theme #27AAE1 */
+:root{
+  --blue:#27AAE1;
+  --dark:#005b8a;
+  --light:#e6f5fc;
+  --bg:#f8f9fa;
+  --text:#212529;
+  --card-bg:#ffffff;
+  --card-border:transparent;
+}
+
+body{
+  font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+}
+
+.navbar{background:var(--blue)!important;}
+.navbar-brand{font-weight:700;letter-spacing:.5px;color:#fff!important;}
+
+.btn-primary{background:var(--blue);border-color:var(--blue);}
+.btn-primary:hover{background:var(--dark);border-color:var(--dark);}
+
+.card{
+  border:none;
+  border-radius:8px;
+  box-shadow:0 2px 6px rgba(0,0,0,.1);
+  background:var(--card-bg);
+}
+
+.table-dark{background:var(--blue)!important;border-color:var(--blue);}
+
+.form-control:focus{
+  border-color:var(--blue);
+  box-shadow:0 0 0 .2rem rgba(39,170,225,.25);
+}
+
+.upload-area{
+  border:3px dashed var(--blue);
+  padding:60px;
+  text-align:center;
+  border-radius:8px;
+  background:var(--light);
+}
+.upload-area:hover{background:#fff;cursor:pointer;}
+
+#overlay div{
+  background:rgba(39,170,225,.35)!important;
+  border:1px solid var(--blue)!important;
+}
+
+/* ============================================================
+   Redactor Viewer Layout
+   ============================================================ */
+
+#workspace{
+  display:flex;
+  gap:20px;
+}
+
+/* Open documents sidebar */
+#sidebar{
+  width:220px;
+  border-right:2px solid var(--blue);
+  padding-right:10px;
+}
+
+.doc-entry{
+  padding:8px;
+  border-radius:6px;
+  cursor:pointer;
+  margin-bottom:6px;
+  border:1px solid var(--blue);
+}
+
+.doc-entry.active{
+  background:var(--blue);
+  color:#fff;
+  font-weight:bold;
+}
+
+.doc-close{
+  float:right;
+  color:red;
+  cursor:pointer;
+}
+
+/* Thumbnails sidebar */
+#thumbSidebar{
+  width:160px;
+  border-right:2px solid var(--blue);
+  padding:10px;
+  transition:width .25s ease;
+  overflow-y:auto;
+}
+
+#thumbSidebar.thumb-collapsed{
+  width:50px;
+}
+
+.thumb-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:10px;
+}
+
+.thumb-img{
+  width:100%;
+  margin-bottom:8px;
+  border:2px solid transparent;
+  border-radius:4px;
+  cursor:pointer;
+}
+
+.thumb-img.active-thumb{
+  border-color:var(--blue);
+}
+
+/* ============================================================
+   Dark mode
+   ============================================================ */
+body.dark-mode{
+  --bg:#121212;
+  --text:#f1f1f1;
+  --card-bg:#1e1e1e;
+  --card-border:#333;
+}
+
+body.dark-mode{
+  background:var(--bg);
+  color:var(--text);
+}
+
+body.dark-mode .card{
+  background:var(--card-bg);
+  border:1px solid var(--card-border);
+  box-shadow:none;
+}
+
+body.dark-mode .table{
+  color:var(--text);
+}
+
+body.dark-mode .table-dark{
+  background:#0d3b52!important;
+  border-color:#0d3b52;
+}
+
+body.dark-mode .form-control,
+body.dark-mode .form-select{
+  background:#222;
+  color:var(--text);
+  border-color:#444;
+}
+
+body.dark-mode .form-control:focus{
+  border-color:var(--blue);
+  box-shadow:0 0 0 .2rem rgba(39,170,225,.35);
+}
+
+body.dark-mode .upload-area{
+  background:#1b2830;
+  border-color:var(--blue);
+}
+
+body.dark-mode .navbar{
+  background:#0d3b52!important;
+}
+
+/* ============================================================
+   Modern Viewer Toolbar
+   ============================================================ */
+
+#viewerToolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--card-bg);
+  border: 1px solid var(--blue);
+  padding: 8px 12px;
+  border-radius: 6px;
+  margin-bottom: 12px;
+}
+
+.toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.page-indicator {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.viewer-frame {
+  position: relative;
+  border: 1px solid var(--blue);
+  display: inline-block;
+}
+
+#overlay {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+}
+
+/* Dark mode */
+body.dark-mode #viewerToolbar {
+  background: #1e1e1e;
+  border-color: var(--blue);
+}
+
+body.dark-mode .page-indicator {
+  color: var(--text);
+}
+
+/* Zoomed canvas should not overflow */
+#viewer {
+  overflow: auto;
+  max-height: 85vh;
+}
+
+/* ============================================================
+   Multi-Page Preview
+   ============================================================ */
+
+.preview-page {
+  position: relative;
+  display: inline-block;
+  margin: 10px;
+  border: 2px solid var(--blue);
+  border-radius: 6px;
+  padding: 6px;
+  background: var(--card-bg);
+}
+
+.preview-thumb {
+  width: 200px;
+  border-radius: 4px;
+}
+
+.preview-overlay-box {
+  position: absolute;
+  border: 2px solid red;
+  background: rgba(255,0,0,0.25);
+  pointer-events: none;
+}
+
+body.dark-mode .preview-page {
+  background: #1e1e1e;
+}
+
+/* ============================================================
+   SETTINGS PAGE (VS CODE STYLE)
+   ============================================================ */
+
+.settings-container {
+  display: flex;
+  height: calc(100vh - 120px);
+}
+
+.settings-sidebar {
+  width: 240px;
+  border-right: 2px solid var(--blue);
+  padding: 20px;
+  background: var(--card-bg);
+}
+
+.settings-title {
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+.settings-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.settings-btn {
+  text-align: left;
+  padding: 10px 12px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  font-size: 15px;
+  cursor: pointer;
+  color: var(--text);
+}
+
+.settings-btn.active {
+  background: var(--blue);
+  color: white;
+}
+
+.settings-btn:hover {
+  background: rgba(39,170,225,0.15);
+}
+
+.settings-content {
+  flex: 1;
+  padding: 25px;
+  overflow-y: auto;
+}
+
+.settings-panel {
+  display: none;
+}
+
+.settings-panel.active {
+  display: block;
+}
+
+/* Dark mode */
+body.dark-mode .settings-sidebar {
+  background: #1e1e1e;
+  border-color: var(--blue);
+}
+
+body.dark-mode .settings-btn {
+  color: var(--text);
+}
+
+body.dark-mode .settings-btn.active {
+  background: var(--blue);
+  color: white;
+}
+
+/* ============================================================
+   Viewer Tips Bar
+   ============================================================ */
+
+.viewer-tips {
+  font-size: 0.9rem;
+  color: var(--text);
+  background: var(--card-bg);
+  border-left: 3px solid var(--blue);
+  padding: 6px 10px;
+  border-radius: 4px;
+  margin-top: 8px;
+}
+
+.viewer-tips .tip-label {
+  font-weight: 600;
+  margin-right: 6px;
+}
+
+body.dark-mode .viewer-tips {
+  background: #1e1e1e;
+}
