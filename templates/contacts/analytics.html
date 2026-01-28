@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="card shadow">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h5><i class="bi bi-graph-up"></i> Contact Analytics</h5>
+    <a href="{{ url_for('contacts.contacts_list') }}" class="btn btn-sm btn-secondary">
+      <i class="bi bi-arrow-left"></i> Back
+    </a>
+  </div>
+
+  <div class="card-body">
+
+    <div class="row text-center mb-4">
+      <div class="col-md-3">
+        <div class="p-3 bg-light rounded shadow-sm">
+          <h3>{{ total_contacts }}</h3>
+          <div class="text-muted">Total Contacts</div>
+        </div>
+      </div>
+
+      <div class="col-md-3">
+        <div class="p-3 bg-light rounded shadow-sm">
+          <h3>{{ notes_count }}</h3>
+          <div class="text-muted">Total Notes</div>
+        </div>
+      </div>
+
+      <div class="col-md-3">
+        <div class="p-3 bg-light rounded shadow-sm">
+          <h3>{{ reminders_open }}</h3>
+          <div class="text-muted">Open Reminders</div>
+        </div>
+      </div>
+
+      <div class="col-md-3">
+        <div class="p-3 bg-light rounded shadow-sm">
+          <h3>{{ reminders_done }}</h3>
+          <div class="text-muted">Completed Reminders</div>
+        </div>
+      </div>
+    </div>
+
+    <hr>
+
+    <h5 class="mt-4"><i class="bi bi-building"></i> Contacts by Company</h5>
+    <ul class="list-group mb-4">
+      {% for row in by_company %}
+      <li class="list-group-item d-flex justify-content-between">
+        <span>{{ row.company or '(No Company)' }}</span>
+        <span class="badge bg-primary">{{ row.count }}</span>
+      </li>
+      {% endfor %}
+    </ul>
+
+    <h5 class="mt-4"><i class="bi bi-tags"></i> Contacts by Tag</h5>
+    <ul class="list-group mb-4">
+      {% for row in by_tag %}
+      <li class="list-group-item d-flex justify-content-between">
+        <span>{{ row.tag }}</span>
+        <span class="badge bg-secondary">{{ row.count }}</span>
+      </li>
+      {% endfor %}
+    </ul>
+
+  </div>
+</div>
+
+{% endblock %}

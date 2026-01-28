@@ -2,57 +2,208 @@
 {% block content %}
 
 <div class="card shadow">
-  <div class="card-header">
+  <div class="card-header d-flex justify-content-between align-items-center">
     <h5><i class="bi bi-people"></i> Contacts</h5>
+
+    <div class="d-flex gap-2">
+
+      <!-- Pipeline -->
+      <a href="{{ url_for('contacts.pipeline_board') }}" class="btn btn-outline-info btn-sm">
+        <i class="bi bi-kanban"></i> Pipeline
+      </a>
+
+      <!-- Analytics -->
+      <a href="{{ url_for('contacts.analytics') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-graph-up"></i> Analytics
+      </a>
+
+      <!-- Companies -->
+      <a href="{{ url_for('contacts.companies') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-building"></i> Companies
+      </a>
+
+      <!-- Duplicates -->
+      <a href="{{ url_for('contacts.duplicates') }}" class="btn btn-outline-warning btn-sm">
+        <i class="bi bi-intersect"></i> Duplicates
+      </a>
+
+      <!-- Import -->
+      <a href="{{ url_for('contacts.import_contacts') }}" class="btn btn-outline-success btn-sm">
+        <i class="bi bi-upload"></i> Import CSV
+      </a>
+
+      <!-- Export All -->
+      <a href="{{ url_for('contacts.export_all_contacts') }}" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-file-earmark-excel"></i> Export All
+      </a>
+
+    </div>
   </div>
 
   <div class="card-body">
 
-    <div class="d-flex justify-content-between mb-3">
-      <form method="get" class="d-flex">
+    <!-- Search + Tag Filter + Add Contact -->
+    <div class="d-flex justify-content-between flex-wrap mb-3 gap-2">
+
+      <form method="get" class="d-flex flex-wrap gap-2">
+
+        <!-- Search -->
         <input type="text"
                name="search"
-               class="form-control me-2"
+               class="form-control"
+               style="min-width: 220px;"
                placeholder="Search by name or company..."
                value="{{ search }}">
-        <button class="btn btn-primary">Search</button>
+
+        <!-- Tag Filter -->
+        <select name="tag" class="form-select" style="min-width: 180px;">
+          <option value="">All Tags</option>
+          {% for t in all_tags %}
+            <option value="{{ t }}" {% if tag_filter == t %}selected{% endif %}>{{ t }}</option>
+          {% endfor %}
+        </select>
+
+        <button class="btn btn-primary">
+          <i class="bi bi-search"></i> Filter
+        </button>
       </form>
 
-      <a href="{{ url_for('contacts_add') }}" class="btn btn-success">
-        + Add Contact
+      <a href="{{ url_for('contacts.contacts_add') }}" class="btn btn-success">
+        <i class="bi bi-person-plus"></i> Add Contact
       </a>
     </div>
 
-    <table class="table table-hover">
+    <!-- CONTACT TABLE -->
+    <table class="table table-hover align-middle">
       <thead class="table-dark">
         <tr>
-          <th>Name</th>
-          <th>Email</th>
-          <th>Phone</th>
-          <th>Company</th>
-          <th>Position</th>
-          <th></th>
+          <th style="width: 26%;">Name</th>
+          <th style="width: 14%;">Email</th>
+          <th style="width: 12%;">Phone</th>
+          <th style="width: 14%;">Company</th>
+          <th style="width: 10%;">Status</th>
+          <th style="width: 10%;">Stage</th>
+          <th style="width: 14%;">Tags</th>
+          <th class="text-end" style="width: 20%;">Actions</th>
         </tr>
       </thead>
 
       <tbody>
         {% for c in contacts %}
         <tr>
-          <td>{{ c['first'] }} {{ c['last'] }}</td>
-          <td>{{ c['email'] or '-' }}</td>
-          <td>{{ c['phone'] or '-' }}</td>
-          <td>{{ c['company'] or '-' }}</td>
-          <td>{{ c['position'] or '-' }}</td>
 
+          <!-- NAME + AVATAR -->
           <td>
+            <div class="d-flex align-items-center">
+
+              <!-- Avatar with auto-color -->
+              <div class="rounded-circle text-white d-flex justify-content-center align-items-center me-2"
+                   style="
+                     width: 34px;
+                     height: 34px;
+                     font-size: 14px;
+                     background: {{ c.avatar_color }};
+                   ">
+                {{ c.first[:1] }}{{ c.last[:1] }}
+              </div>
+
+              <div>
+                <div class="fw-semibold">{{ c.first }} {{ c.last }}</div>
+                {% if c.email %}
+                  <small class="text-muted">{{ c.email }}</small>
+                {% endif %}
+              </div>
+            </div>
+          </td>
+
+          <td>{{ c.email or '-' }}</td>
+          <td>{{ c.phone or '-' }}</td>
+          <td>{{ c.company or '-' }}</td>
+
+          <!-- STATUS BADGE -->
+          <td>
+            {% set s = c.status or 'active' %}
+            {% if s == 'active' %}
+              <span class="badge bg-success">Active</span>
+            {% elif s == 'lead' %}
+              <span class="badge bg-info text-dark">Lead</span>
+            {% elif s == 'customer' %}
+              <span class="badge bg-primary">Customer</span>
+            {% elif s == 'inactive' %}
+              <span class="badge bg-secondary">Inactive</span>
+            {% else %}
+              <span class="badge bg-dark">{{ s }}</span>
+            {% endif %}
+          </td>
+
+          <!-- PIPELINE STAGE -->
+          <td>
+            <span class="badge bg-light text-dark border">
+              {{ c.stage or 'new' }}
+            </span>
+          </td>
+
+          <!-- TAGS -->
+          <td>
+            {% if c.tags %}
+              {% for t in c.tags %}
+                <span class="badge bg-secondary">{{ t }}</span>
+              {% endfor %}
+            {% else %}
+              <span class="text-muted">-</span>
+            {% endif %}
+          </td>
+
+          <!-- ACTIONS -->
+          <td class="text-end">
+
+            <!-- Quick View -->
+            <button type="button"
+                    class="btn btn-sm btn-outline-info me-1"
+                    onclick="openContactModal({{ c.id }})">
+              <i class="bi bi-eye"></i>
+            </button>
+
+            <!-- Full View -->
+            <a href="{{ url_for('contacts.view_contact', id=c.id) }}"
+               class="btn btn-sm btn-outline-secondary me-1">
+              <i class="bi bi-box-arrow-up-right"></i>
+            </a>
+
+            <!-- Edit -->
+            <a href="{{ url_for('contacts.contacts_edit', id=c.id) }}"
+               class="btn btn-sm btn-outline-secondary me-1">
+              <i class="bi bi-pencil"></i>
+            </a>
+
+            <!-- Export -->
+            <a href="{{ url_for('contacts.export_contact', id=c.id) }}"
+               class="btn btn-sm btn-outline-primary me-1">
+              <i class="bi bi-file-earmark-excel"></i>
+            </a>
+
+            <!-- vCard -->
+            <a href="{{ url_for('contacts.export_vcard', id=c.id) }}"
+               class="btn btn-sm btn-outline-success me-1">
+              <i class="bi bi-person-vcard"></i>
+            </a>
+
+            <!-- ICS -->
+            <a href="{{ url_for('contacts.export_ics', id=c.id) }}"
+               class="btn btn-sm btn-outline-warning me-1">
+              <i class="bi bi-calendar-event"></i>
+            </a>
+
+            <!-- Delete -->
             <form method="POST"
-                  action="{{ url_for('contacts_delete', id=c['id']) }}"
+                  action="{{ url_for('contacts.contacts_delete', id=c.id) }}"
                   style="display:inline;"
                   onsubmit="return confirm('Delete this contact?');">
               <button class="btn btn-sm btn-outline-danger">
-                Delete
+                <i class="bi bi-trash"></i>
               </button>
             </form>
+
           </td>
         </tr>
         {% endfor %}
@@ -62,5 +213,36 @@
 
   </div>
 </div>
+
+<!-- Quick View Modal -->
+<div class="modal fade" id="contactQuickViewModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-body" id="contactQuickViewBody">
+        <div class="text-center py-5">
+          <div class="spinner-border text-primary"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function openContactModal(id) {
+    const modalBody = document.getElementById('contactQuickViewBody');
+    modalBody.innerHTML = `
+      <div class="text-center py-5">
+        <div class="spinner-border text-primary"></div>
+      </div>
+    `;
+    const modal = new bootstrap.Modal(document.getElementById('contactQuickViewModal'));
+    modal.show();
+
+    fetch(`/contacts/view_modal/${id}`)
+      .then(r => r.text())
+      .then(html => modalBody.innerHTML = html)
+      .catch(() => modalBody.innerHTML = '<div class="alert alert-danger">Failed to load contact.</div>');
+  }
+</script>
 
 {% endblock %}
