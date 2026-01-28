@@ -104,7 +104,77 @@ def init_db():
                 name TEXT,
                 phone TEXT,
                 email TEXT,
-                address TEXT
+                address TEXT,
+                first_name_contact TEXT,
+                last_name_contact TEXT,
+                email_contact TEXT,
+                phone_contact TEXT,
+                company_contact TEXT,
+                position_contact TEXT,
+                address_contact TEXT,
+                notes_contact TEXT,
+                website_contact TEXT,
+                business_card_front_contact TEXT,
+                business_card_back_contact TEXT,
+                face_image_contact TEXT,
+                company_logo_contact TEXT
+            )
+        """)
+
+        existing_contact_cols = {
+            row[1] for row in c.execute("PRAGMA table_info(contacts);").fetchall()
+        }
+
+        required_contact_cols = {
+            "first_name_contact": "TEXT",
+            "last_name_contact": "TEXT",
+            "email_contact": "TEXT",
+            "phone_contact": "TEXT",
+            "company_contact": "TEXT",
+            "position_contact": "TEXT",
+            "address_contact": "TEXT",
+            "notes_contact": "TEXT",
+            "website_contact": "TEXT",
+            "business_card_front_contact": "TEXT",
+            "business_card_back_contact": "TEXT",
+            "face_image_contact": "TEXT",
+            "company_logo_contact": "TEXT",
+        }
+
+        for col, col_type in required_contact_cols.items():
+            if col not in existing_contact_cols:
+                c.execute(f"ALTER TABLE contacts ADD COLUMN {col} {col_type};")
+
+        # -------------------------
+        # CONTACT NOTES (timeline)
+        # -------------------------
+        c.execute("""
+            CREATE TABLE IF NOT EXISTS contact_notes (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                contact_id INTEGER NOT NULL,
+                timestamp TEXT NOT NULL,
+                note_text TEXT NOT NULL,
+                FOREIGN KEY(contact_id) REFERENCES contacts(id)
+            )
+        """)
+
+        # -------------------------
+        # CONTACT TAGS
+        # -------------------------
+        c.execute("""
+            CREATE TABLE IF NOT EXISTS contact_tags (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT UNIQUE NOT NULL
+            )
+        """)
+
+        c.execute("""
+            CREATE TABLE IF NOT EXISTS contact_tag_map (
+                contact_id INTEGER NOT NULL,
+                tag_id INTEGER NOT NULL,
+                PRIMARY KEY (contact_id, tag_id),
+                FOREIGN KEY(contact_id) REFERENCES contacts(id),
+                FOREIGN KEY(tag_id) REFERENCES contact_tags(id)
             )
         """)
 
@@ -183,7 +253,6 @@ def init_db():
         # -------------------------
         # SCHEMA ALIGNMENT / MIGRATIONS
         # -------------------------
-        # Ensure invoices table has all columns used by backend/frontend
         existing_cols = {
             row[1] for row in c.execute("PRAGMA table_info(invoices);").fetchall()
         }
