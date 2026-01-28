@@ -1,156 +1,203 @@
 import sqlite3
-
-DB_PATH = "database.db"
+import os
+from flask import current_app
 
 
 def get_conn():
-    return sqlite3.connect(DB_PATH)
+    """Return a SQLite connection using the app's configured DB path."""
+    db_path = current_app.config["DATABASE"]
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    return conn
 
 
 def init_db():
-    conn = get_conn()
-    c = conn.cursor()
+    """Create all required tables if they do not exist and align schemas."""
+    with get_conn() as conn:
+        c = conn.cursor()
 
-    # Vendors
-    c.execute('''
-    CREATE TABLE IF NOT EXISTS vendors(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT,
-        gst_number TEXT,
-        address TEXT,
-        phone TEXT,
-        email TEXT
-    )
-    ''')
+        # -------------------------
+        # INVOICES
+        # -------------------------
+        c.execute("""
+            CREATE TABLE IF NOT EXISTS invoices (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                num TEXT,
+                date TEXT,
+                vendor_id INTEGER,
+                invoice_type TEXT,
+                comments TEXT,
+                terms_conditions TEXT,
+                sig_id INTEGER,
+                ship_cost REAL,
+                tax_rate REAL,
+                tax REAL,
+                subtotal REAL,
+                total REAL,
+                pdf TEXT,
+                gst_number TEXT,
+                ship_method TEXT,
+                ship_terms TEXT,
+                delivery_date TEXT,
+                template TEXT,
+                FOREIGN KEY(vendor_id) REFERENCES vendors(id)
+            )
+        """)
 
-    # GST Numbers
-    c.execute('''
-    CREATE TABLE IF NOT EXISTS gst_numbers(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        gst TEXT UNIQUE
-    )
-    ''')
+        # -------------------------
+        # INVOICE ITEMS
+        # -------------------------
+        c.execute("""
+            CREATE TABLE IF NOT EXISTS invoice_items (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                invoice_id INTEGER,
+                lot_number TEXT,
+                item TEXT,
+                qty REAL,
+                units TEXT,
+                unit_price REAL,
+                line_total REAL,
+                FOREIGN KEY(invoice_id) REFERENCES invoices(id)
+            )
+        """)
 
-    # Contacts
-    c.execute('''
-    CREATE TABLE IF NOT EXISTS contacts(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        first_name TEXT,
-        last_name TEXT,
-        email TEXT,
-        phone TEXT,
-        company TEXT,
-        position TEXT,
-        address TEXT,
-        notes TEXT
-    )
-    ''')
+        # -------------------------
+        # MANIFESTS
+        # -------------------------
+        c.execute("""
+            CREATE TABLE IF NOT EXISTS manifests (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                num TEXT,
+                date TEXT,
+                carrier TEXT,
+                delivery TEXT,
+                ship_from TEXT,
+                ship_to TEXT,
+                contact_name TEXT,
+                ship_method TEXT,
+                sig_id INTEGER,
+                total_weight REAL,
+                pdf TEXT
+            )
+        """)
 
-    # Invoices (simplified core)
-    c.execute('''
-    CREATE TABLE IF NOT EXISTS invoices(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        num TEXT,
-        vendor_id INTEGER,
-        date TEXT,
-        subtotal REAL,
-        tax REAL,
-        total REAL,
-        pdf_path TEXT,
-        FOREIGN KEY(vendor_id) REFERENCES vendors(id)
-    )
-    ''')
+        # -------------------------
+        # MANIFEST ITEMS
+        # -------------------------
+        c.execute("""
+            CREATE TABLE IF NOT EXISTS manifest_items (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                manifest_id INTEGER,
+                item TEXT,
+                lot TEXT,
+                weight REAL,
+                FOREIGN KEY(manifest_id) REFERENCES manifests(id)
+            )
+        """)
 
-    # Invoice items (single definition – duplicate removed)
-    c.execute('''
-    CREATE TABLE IF NOT EXISTS invoice_items(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        invoice_id INTEGER,
-        lot_number TEXT,
-        item TEXT,
-        qty REAL,
-        units TEXT,
-        unit_price REAL,
-        line_total REAL,
-        FOREIGN KEY(invoice_id) REFERENCES invoices(id)
-    )
-    ''')
+        # -------------------------
+        # CONTACTS
+        # -------------------------
+        c.execute("""
+            CREATE TABLE IF NOT EXISTS contacts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT,
+                phone TEXT,
+                email TEXT,
+                address TEXT
+            )
+        """)
 
-    # Manifests
-    c.execute('''
-    CREATE TABLE IF NOT EXISTS manifests(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        num TEXT,
-        date TEXT,
-        carrier TEXT,
-        delivery TEXT,
-        ship_from TEXT,
-        ship_to TEXT,
-        contact TEXT,
-        weight REAL,
-        pdf_path TEXT
-    )
-    ''')
+        # -------------------------
+        # VENDORS
+        # -------------------------
+        c.execute("""
+            CREATE TABLE IF NOT EXISTS vendors (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT,
+                gst_number TEXT,
+                address TEXT,
+                phone TEXT,
+                email TEXT
+            )
+        """)
 
-    # Manifest items
-    c.execute('''
-    CREATE TABLE IF NOT EXISTS manifest_items(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        manifest_id INTEGER,
-        item TEXT,
-        lot TEXT,
-        weight REAL,
-        FOREIGN KEY(manifest_id) REFERENCES manifests(id)
-    )
-    ''')
+        # -------------------------
+        # GST NUMBERS (UPDATED)
+        # -------------------------
+        c.execute("""
+            CREATE TABLE IF NOT EXISTS gst (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                gst_number TEXT,
+                description TEXT,
+                is_default INTEGER DEFAULT 0
+            )
+        """)
 
-    # Redactor preview
-    c.execute('''
-    CREATE TABLE IF NOT EXISTS redaction_preview(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        filename TEXT,
-        page INTEGER,
-        x REAL,
-        y REAL,
-        width REAL,
-        height REAL,
-        type TEXT,
-        text TEXT,
-        created TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )
-    ''')
+        # -------------------------
+        # ITEMS
+        # -------------------------
+        c.execute("""
+            CREATE TABLE IF NOT EXISTS items (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                default_units TEXT,
+                default_price REAL
+            )
+        """)
 
-    # Redactor workspace
-    c.execute('''
-    CREATE TABLE IF NOT EXISTS open_documents(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        filename TEXT,
-        display_name TEXT,
-        active INTEGER DEFAULT 0,
-        opened TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )
-    ''')
+        # -------------------------
+        # INVOICE SEQUENCES
+        # -------------------------
+        c.execute("""
+            CREATE TABLE IF NOT EXISTS invoice_sequences (
+                prefix TEXT PRIMARY KEY,
+                last_number INTEGER
+            )
+        """)
 
-    # Redaction history
-    c.execute('''
-    CREATE TABLE IF NOT EXISTS redaction_history(
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        fname TEXT,
-        orig TEXT,
-        redacted TEXT,
-        changes TEXT,
-        ver INTEGER,
-        created TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )
-    ''')
+        # -------------------------
+        # SIGNATURES
+        # -------------------------
+        c.execute("""
+            CREATE TABLE IF NOT EXISTS signatures (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                position TEXT,
+                filename TEXT NOT NULL,
+                is_default INTEGER DEFAULT 0
+            )
+        """)
 
-    # Settings table (used by app.services.settings)
-    c.execute('''
-    CREATE TABLE IF NOT EXISTS settings(
-        key TEXT PRIMARY KEY,
-        value TEXT
-    )
-    ''')
+        # -------------------------
+        # REDACTION LOGS
+        # -------------------------
+        c.execute("""
+            CREATE TABLE IF NOT EXISTS redactions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                filename TEXT,
+                timestamp TEXT
+            )
+        """)
 
-    conn.commit()
-    conn.close()
+        # -------------------------
+        # SCHEMA ALIGNMENT / MIGRATIONS
+        # -------------------------
+        # Ensure invoices table has all columns used by backend/frontend
+        existing_cols = {
+            row[1] for row in c.execute("PRAGMA table_info(invoices);").fetchall()
+        }
+
+        required_invoice_cols = {
+            "gst_number": "TEXT",
+            "ship_method": "TEXT",
+            "ship_terms": "TEXT",
+            "delivery_date": "TEXT",
+            "template": "TEXT"
+        }
+
+        for col, col_type in required_invoice_cols.items():
+            if col not in existing_cols:
+                c.execute(f"ALTER TABLE invoices ADD COLUMN {col} {col_type};")
+
+        conn.commit()
