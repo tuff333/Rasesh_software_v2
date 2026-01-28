@@ -2,8 +2,8 @@
 {% block content %}
 
 <div class="card shadow">
-  <div class="card-header text-white" style="background:#27AAE1;">
-    <h5><i class="bi bi-file-pdf"></i> PDF Redaction Tool</h5>
+  <div class="card-header">
+    <h5><i class="bi bi-file-earmark-arrow-up"></i> PDF Redaction Tool</h5>
   </div>
 
   <div class="card-body">
@@ -24,7 +24,6 @@
       <h5>Drag & Drop PDF Here</h5>
       <p>or</p>
 
-      <!-- Hidden file input -->
       <input type="file" id="pdfUpload" accept=".pdf" style="display:none;">
 
       <button class="btn btn-primary"
@@ -36,29 +35,44 @@
   </div>
 </div>
 
-<script>
-const uploadArea = document.getElementById('uploadArea');
-const fileInput  = document.getElementById('pdfUpload');
-const uploadSwitch = document.getElementById('uploadToRedaction');
+<!-- Upload Overlay -->
+<div class="upload-overlay" id="uploadOverlay">
+  <div class="upload-overlay-inner">
+    <div class="upload-spinner"></div>
+    <div style="font-weight:600; letter-spacing:0.5px;">Please wait, Rasesh…</div>
+    <div style="font-size:12px; margin-top:4px; color:#ccc;">
+      We’re preparing your document for redaction.
+    </div>
+  </div>
+</div>
 
-// Handle browse upload
+<script>
+const uploadArea    = document.getElementById('uploadArea');
+const fileInput     = document.getElementById('pdfUpload');
+const uploadSwitch  = document.getElementById('uploadToRedaction');
+const uploadOverlay = document.getElementById('uploadOverlay');
+
+function showOverlay() {
+  uploadOverlay.style.display = 'flex';
+}
+function hideOverlay() {
+  uploadOverlay.style.display = 'none';
+}
+
 fileInput.addEventListener('change', e => {
   const file = e.target.files[0];
   if (file) uploadPDF(file);
 });
 
-// Drag over highlight
 uploadArea.addEventListener('dragover', e => {
   e.preventDefault();
   uploadArea.style.background = '#e6f5fc';
 });
 
-// Remove highlight
 uploadArea.addEventListener('dragleave', () => {
   uploadArea.style.background = '';
 });
 
-// Handle drop
 uploadArea.addEventListener('drop', e => {
   e.preventDefault();
   uploadArea.style.background = '';
@@ -66,7 +80,6 @@ uploadArea.addEventListener('drop', e => {
   if (file) uploadPDF(file);
 });
 
-// Upload function
 function uploadPDF(file) {
   if (file.type !== 'application/pdf') {
     alert('Please upload a PDF file.');
@@ -76,8 +89,9 @@ function uploadPDF(file) {
   const formData = new FormData();
   formData.append('pdf', file);
 
-  // Decide module based on switch
   const module = uploadSwitch.checked ? 'redaction' : 'default';
+
+  showOverlay();
 
   fetch(`/redactor/upload?module=${encodeURIComponent(module)}`, {
     method: 'POST',
@@ -88,10 +102,14 @@ function uploadPDF(file) {
       if (data.success) {
         window.location.href = `/redactor/viewer/${data.filename}`;
       } else {
+        hideOverlay();
         alert('Upload failed: ' + data.error);
       }
     })
-    .catch(() => alert('Upload failed.'));
+    .catch(() => {
+      hideOverlay();
+      alert('Upload failed.');
+    });
 }
 </script>
 

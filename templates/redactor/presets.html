@@ -1,15 +1,9 @@
 {% extends 'base.html' %}
 {% block content %}
 
-<!-- ============================================================
-     REDACTION PRESETS
-     - Save common terms (emails, GST, phone patterns, etc.)
-     - List + delete presets
-   ============================================================ -->
-
 <div class="card shadow">
-  <div class="card-header text-white" style="background:#27AAE1;">
-    <h5>Redaction Presets</h5>
+  <div class="card-header">
+    <h5><i class="bi bi-funnel"></i> Redaction Presets</h5>
   </div>
 
   <div class="card-body">
@@ -28,7 +22,7 @@
           <input type="text"
                  name="terms"
                  class="form-control"
-                 placeholder="Terms (comma-separated, e.g. email,phone,GST)"
+                 placeholder="Terms (comma-separated)"
                  required>
         </div>
         <div class="col-md-2">
@@ -57,7 +51,6 @@
             <td>
               <form method="POST"
                     action="{{ url_for('redactor_preset_delete', id=p[0]) }}"
-                    style="display:inline;"
                     onsubmit="return confirm('Delete this preset?');">
                 <button class="btn btn-sm btn-danger">
                   Delete

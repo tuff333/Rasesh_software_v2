@@ -1,19 +1,44 @@
 @echo off
+chcp 65001 >nul
+
 echo ========================================
 echo 🚀 Rasesh IM PDF CRM Generator
 echo ========================================
 echo 📊 Starting server...
-echo .
+echo.
 
+REM ---------------------------------------------------------
+REM Create virtual environment if missing
+REM ---------------------------------------------------------
 IF NOT EXIST venv (
     echo Creating virtual environment...
-    python -m venv venv
-    call venv\Scripts\activate
-    python -m pip install -r requirements.txt
-) ELSE (
-    call venv\Scripts\activate
+    py -3 -m venv venv
 )
 
-start http://localhost:5000
+REM ---------------------------------------------------------
+REM Activate venv
+REM ---------------------------------------------------------
+call venv\Scripts\activate
+
+REM ---------------------------------------------------------
+REM Install dependencies if needed
+REM ---------------------------------------------------------
+IF NOT EXIST venv\Lib\site-packages\flask (
+    echo Installing dependencies...
+    pip install -r requirements.txt
+)
+
+REM ---------------------------------------------------------
+REM Open browser
+REM ---------------------------------------------------------
+start "" http://localhost:5000/
+
+REM ---------------------------------------------------------
+REM Run the application using the VENV Python
+REM ---------------------------------------------------------
+echo Starting Flask server...
 python app.py
+
+echo.
+echo Server stopped.
 pause

@@ -160,6 +160,28 @@ document.getElementById('nextPage').onclick = () => {
 };
 
 /* ============================================================
+   PAGE JUMP (ADD THIS RIGHT AFTER)
+   ============================================================ */
+
+const pageJumpInput = document.getElementById('pageJump');
+const pageJumpGo    = document.getElementById('pageJumpGo');
+
+if (pageJumpGo && pageJumpInput) {
+  pageJumpGo.onclick = () => {
+    const val = parseInt(pageJumpInput.value, 10);
+    if (!isNaN(val) && val >= 1 && val <= pageCount) {
+      loadPage(val - 1);
+    }
+  };
+
+  pageJumpInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      pageJumpGo.click();
+    }
+  });
+}
+
+/* ============================================================
    DRAW AREA REDACTION (Preview Mode)
    ============================================================ */
 

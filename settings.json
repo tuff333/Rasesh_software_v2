@@ -18,5 +18,13 @@
         "zoom_reset": "Ctrl+0",
         "toggle_thumbs": "Ctrl+Shift+W",
         "toggle_ocr": "Ctrl+Shift+O"
-    }
+    },
+    "default_template": "classic",
+    "default_signature_id": "",
+    "default_gst": "",
+    "smtp_host": "",
+    "smtp_port": 587,
+    "smtp_username": "",
+    "smtp_password": "",
+    "smtp_from": ""
 }

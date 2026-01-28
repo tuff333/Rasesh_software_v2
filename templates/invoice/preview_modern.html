@@ -1,0 +1,221 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Invoice {{ invoice['num'] }}</title>
+
+  <style>
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      padding: 40px;
+      background: #f5f7fa;
+      color: #333;
+      font-size: 14px;
+    }
+
+    .invoice-box {
+      background: #fff;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 12px rgba(0,0,0,0.1);
+      max-width: 900px;
+      margin: auto;
+    }
+
+    h1 {
+      font-size: 26px;
+      color: #0078d7;
+      margin-bottom: 5px;
+    }
+
+    .header-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 25px;
+    }
+
+    .section-title {
+      font-size: 15px;
+      font-weight: bold;
+      color: #0078d7;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+    }
+
+    .info-box {
+      background: #eef4fb;
+      padding: 12px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+      font-size: 13px;
+    }
+
+    th {
+      background: #0078d7;
+      color: #fff;
+      padding: 8px;
+      text-align: left;
+    }
+
+    td {
+      padding: 8px;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .totals-box {
+      margin-top: 25px;
+      float: right;
+      width: 280px;
+      background: #eef4fb;
+      padding: 15px;
+      border-radius: 8px;
+    }
+
+    .totals-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 6px;
+      font-size: 14px;
+    }
+
+    .totals-row b {
+      font-size: 15px;
+    }
+
+    .signature {
+      margin-top: 40px;
+      font-size: 13px;
+    }
+
+    .signature img {
+      width: 180px;
+      height: auto;
+      margin-bottom: 5px;
+    }
+
+    .actions {
+      margin-top: 35px;
+    }
+
+    .btn {
+      padding: 8px 14px;
+      border-radius: 6px;
+      text-decoration: none;
+      font-size: 14px;
+      margin-right: 10px;
+      color: #fff;
+    }
+
+    .btn-print { background: #0078d7; }
+    .btn-download { background: #28a745; }
+  </style>
+</head>
+
+<body>
+
+<div class="invoice-box">
+
+  <div class="header-row">
+    <div>
+      <h1>Purchase Order</h1>
+      <div><b>PO #:</b> {{ invoice['num'] }}</div>
+      <div><b>Date:</b> {{ invoice['date'] }}</div>
+    </div>
+
+    <div style="text-align:right;">
+      <div class="section-title">Vendor</div>
+      <div>{{ invoice['vn'] }}</div>
+    </div>
+  </div>
+
+  <!-- BILL TO / SHIP TO -->
+  <div class="info-box">
+    <div class="section-title">Bill To</div>
+    <div>{{ invoice['ca'] or 'Medicine Wheel Ranch Inc., 443 North Russell Road, Russell, ON K4R 1E5' }}</div>
+  </div>
+
+  <div class="info-box">
+    <div class="section-title">Ship To</div>
+    <div>Medicine Wheel Ranch Inc., 9-2020 Lanthier Dr, Suite 236, Orleans, ON K4A 3V4</div>
+  </div>
+
+  <!-- ITEMS TABLE -->
+  <table>
+    <thead>
+      <tr>
+        <th>Lot #</th>
+        <th>Item</th>
+        <th>Qty</th>
+        <th>Units</th>
+        <th>Unit Price</th>
+        <th>Total</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      {% for it in items %}
+      <tr>
+        <td>{{ it.lot }}</td>
+        <td>{{ it.item }}</td>
+        <td>{{ it.qty }}</td>
+        <td>{{ it.units }}</td>
+        <td>${{ "%.2f"|format(it.price) }}</td>
+        <td>${{ "%.2f"|format(it.total) }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <!-- TOTALS -->
+  <div class="totals-box">
+    <div class="totals-row">
+      <span>Subtotal:</span>
+      <span>${{ "%.2f"|format(invoice.total) }}</span>
+    </div>
+
+    <div class="totals-row">
+      <span>Tax:</span>
+      <span>$0.00</span>
+    </div>
+
+    <div class="totals-row">
+      <span>Shipping:</span>
+      <span>$0.00</span>
+    </div>
+
+    <hr>
+
+    <div class="totals-row">
+      <b>Grand Total:</b>
+      <b>${{ "%.2f"|format(invoice.total) }}</b>
+    </div>
+  </div>
+
+  <!-- SIGNATURE -->
+  {% if invoice.simg and invoice.simg != 'None' %}
+  <div class="signature">
+    <img src="{{ invoice.simg }}">
+    <br>{{ invoice.sn }} – {{ invoice.sp }}
+  </div>
+  {% endif %}
+
+  <!-- ACTION BUTTONS -->
+  <div class="actions">
+    <a href="javascript:window.print()" class="btn btn-print">Print</a>
+
+    <a href="{{ url_for('invoice_routes.invoice_download', filename=invoice.pdf) }}"
+       class="btn btn-download">
+      Download PDF
+    </a>
+  </div>
+
+</div>
+
+</body>
+</html>

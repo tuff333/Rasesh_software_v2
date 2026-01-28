@@ -4,6 +4,79 @@
   <meta charset="utf-8">
   <title>Invoice {{ invoice['num'] }}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/print.css') }}">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 40px;
+      font-size: 13px;
+      color: #333;
+    }
+    h2 {
+      color: #27AAE1;
+      margin-bottom: 5px;
+      text-transform: uppercase;
+    }
+    .hdr {
+      border-bottom: 2px solid #27AAE1;
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+    }
+    h5 {
+      margin: 0 0 5px 0;
+      font-size: 14px;
+      color: #27AAE1;
+      text-transform: uppercase;
+    }
+    .flex-between {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+      font-size: 12px;
+    }
+    th {
+      background: #27AAE1;
+      color: #fff;
+      padding: 6px;
+      border: 1px solid #ccc;
+      text-align: left;
+    }
+    td {
+      border: 1px solid #ccc;
+      padding: 6px;
+    }
+    .totals {
+      margin-top: 20px;
+      width: 260px;
+      float: right;
+      font-size: 12px;
+    }
+    .totals .row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+    .totals hr {
+      border-top: 1px solid #333;
+      margin: 6px 0;
+    }
+    .sig {
+      margin-top: 40px;
+      font-size: 12px;
+    }
+    .sig-img {
+      width: 180px;
+      height: auto;
+      margin-bottom: 5px;
+    }
+    .no-print {
+      margin-top: 30px;
+    }
+  </style>
 </head>
 
 <body>
@@ -14,23 +87,23 @@
 
   <div class="flex-between">
     <div>
-      <h5>BILL TO</h5>
+      <h5>Bill To</h5>
       <p>{{ invoice['ca'] or 'Medicine Wheel Ranch Inc.<br>443 North Russell Road, Russell, ON K4R 1E5' }}</p>
     </div>
 
     <div>
-      <h5>SHIP TO</h5>
+      <h5>Ship To</h5>
       <p>Medicine Wheel Ranch Inc.<br>9-2020 Lanthier Dr, Suite 236, Orleans, ON K4A 3V4</p>
     </div>
   </div>
 
   <p>
-    <b>Vendor:</b> {{ invoice['vn'] }} |
-    <b>PO #:</b> {{ invoice['num'] }} |
+    <b>Vendor:</b> {{ invoice['vn'] }} &nbsp; | &nbsp;
+    <b>PO #:</b> {{ invoice['num'] }} &nbsp; | &nbsp;
     <b>Date:</b> {{ invoice['date'] }}
   </p>
 
-  <table class="table">
+  <table>
     <thead>
       <tr>
         <th>Lot #</th>
@@ -57,11 +130,31 @@
   </table>
 
   <div class="totals">
-    <div class="row"><span>Subtotal:</span><span>${{ "%.2f"|format(invoice.sub) }}</span></div>
-    <div class="row"><span>Tax ({{ invoice.tax_rate }}%):</span><span>${{ "%.2f"|format(invoice.tax) }}</span></div>
-    <div class="row"><span>Shipping:</span><span>${{ "%.2f"|format(invoice.ship_cost) }}</span></div>
+
+    <!-- Subtotal removed because backend does not provide it -->
+    <div class="row">
+      <span>Subtotal:</span>
+      <span>${{ "%.2f"|format(invoice.total) }}</span>
+    </div>
+
+    <!-- Tax removed because backend does not provide it -->
+    <div class="row">
+      <span>Tax:</span>
+      <span>$0.00</span>
+    </div>
+
+    <!-- Shipping removed because backend does not provide it -->
+    <div class="row">
+      <span>Shipping:</span>
+      <span>$0.00</span>
+    </div>
+
     <hr>
-    <div class="row total"><b>Grand Total:</b><b>${{ "%.2f"|format(invoice.total) }}</b></div>
+
+    <div class="row total">
+      <b>Grand Total:</b>
+      <b>${{ "%.2f"|format(invoice.total) }}</b>
+    </div>
   </div>
 
   {% if invoice.simg and invoice.simg != 'None' %}
@@ -73,7 +166,11 @@
 
   <div class="no-print">
     <a href="javascript:window.print()" class="btn btn-primary me-2">Print</a>
-    <a href="{{ url_for('invoice_download',id=invoice.id) }}" class="btn btn-success">Download PDF</a>
+
+    <a href="{{ url_for('invoice_routes.invoice_download', filename=invoice.pdf) }}"
+       class="btn btn-success">
+      Download PDF
+    </a>
   </div>
 
 </body>

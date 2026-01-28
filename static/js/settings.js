@@ -1,4 +1,6 @@
-// Sidebar navigation
+// ---------------------------------------------
+// TAB NAVIGATION
+// ---------------------------------------------
 document.querySelectorAll('.settings-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.settings-btn')
@@ -15,17 +17,37 @@ document.querySelectorAll('.settings-btn').forEach(btn => {
 
 let currentSettings = null;
 
-// Load settings data
+// ---------------------------------------------
+// LOAD SETTINGS
+// ---------------------------------------------
 fetch("/settings/data")
   .then(r => r.json())
   .then(s => {
     currentSettings = s;
+
+    // APPLY THEME TO LOCALSTORAGE
+    localStorage.setItem("crm-theme", s.theme || "light");
+
     initGeneralSettings(s);
+    initInvoiceSettings(s);
+    initEmailSettings(s);
+
     renderShortcutList(s.shortcuts || {});
   });
 
+
+// ---------------------------------------------
+// GENERAL SETTINGS
+// ---------------------------------------------
 function initGeneralSettings(s) {
-  document.getElementById("set-theme").value = s.theme || "light";
+  const themeSelect = document.getElementById("set-theme");
+  themeSelect.value = s.theme || "light";
+
+  // UPDATE LOCALSTORAGE WHEN USER CHANGES THEME
+  themeSelect.addEventListener("change", function () {
+    localStorage.setItem("crm-theme", this.value);
+  });
+
   document.getElementById("set-upload-folder").value = s.upload_folder || "redaction";
   document.getElementById("set-ocr-default").checked = !!s.ocr_default;
   document.getElementById("set-zoom-mode").value = s.zoom_mode || "fit-width";
@@ -36,7 +58,64 @@ function initGeneralSettings(s) {
   document.getElementById("set-output-manifests").value = s.output_manifests || "output/manifests";
 }
 
-// Render shortcuts list
+
+// ---------------------------------------------
+// INVOICE SETTINGS
+// ---------------------------------------------
+function initInvoiceSettings(s) {
+  document.getElementById("set-default-template").value = s.default_template || "classic";
+  document.getElementById("set-default-signature").value = s.default_signature_id || "";
+  document.getElementById("set-default-gst").value = s.default_gst || "";
+}
+
+
+// ---------------------------------------------
+// EMAIL SETTINGS
+// ---------------------------------------------
+function initEmailSettings(s) {
+  document.getElementById("smtp-host").value = s.smtp_host || "";
+  document.getElementById("smtp-port").value = s.smtp_port || 587;
+  document.getElementById("smtp-username").value = s.smtp_username || "";
+  document.getElementById("smtp-password").value = s.smtp_password || "";
+  document.getElementById("smtp-from").value = s.smtp_from || "";
+
+  const testBtn = document.getElementById("smtp-test-btn");
+  const resultBox = document.getElementById("smtp-test-result");
+
+  if (testBtn) {
+    testBtn.onclick = () => {
+      resultBox.textContent = "Sending test email...";
+
+      fetch("/email/test", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+          host: document.getElementById("smtp-host").value,
+          port: document.getElementById("smtp-port").value,
+          username: document.getElementById("smtp-username").value,
+          password: document.getElementById("smtp-password").value,
+          from: document.getElementById("smtp-from").value
+        })
+      })
+        .then(r => r.json())
+        .then(d => {
+          if (d.success) {
+            resultBox.textContent = "Test email sent successfully.";
+          } else {
+            resultBox.textContent = "Failed: " + (d.error || "Unknown error");
+          }
+        })
+        .catch(err => {
+          resultBox.textContent = "Error: " + err;
+        });
+    };
+  }
+}
+
+
+// ---------------------------------------------
+// SHORTCUTS
+// ---------------------------------------------
 function renderShortcutList(shortcuts) {
   const container = document.getElementById("shortcut-list");
   container.innerHTML = "";
@@ -82,7 +161,6 @@ function renderShortcutList(shortcuts) {
   };
 }
 
-// Capture shortcut
 function captureShortcut(btn) {
   btn.textContent = "Press keys...";
   btn.disabled = true;
@@ -97,7 +175,7 @@ function captureShortcut(btn) {
 
     let key = e.key;
     if (key === " ") key = "Space";
-    if (key === "ArrowLeft" || key === "ArrowRight" || key === "ArrowUp" || key === "ArrowDown") {
+    if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(key)) {
       parts.push(key);
     } else if (!["Control", "Shift", "Alt"].includes(key)) {
       parts.push(key.length === 1 ? key.toUpperCase() : key);
@@ -113,7 +191,10 @@ function captureShortcut(btn) {
   document.addEventListener("keydown", handler);
 }
 
-// Save settings
+
+// ---------------------------------------------
+// SAVE SETTINGS
+// ---------------------------------------------
 function saveSettings() {
   const shortcuts = {};
   document.querySelectorAll("#shortcut-list button[data-action]").forEach(btn => {
@@ -121,6 +202,7 @@ function saveSettings() {
   });
 
   const data = {
+    // GENERAL
     theme: document.getElementById("set-theme").value,
     upload_folder: document.getElementById("set-upload-folder").value,
     ocr_default: document.getElementById("set-ocr-default").checked,
@@ -131,8 +213,24 @@ function saveSettings() {
     output_invoices: document.getElementById("set-output-invoices").value,
     output_manifests: document.getElementById("set-output-manifests").value,
 
+    // INVOICE SETTINGS
+    default_template: document.getElementById("set-default-template").value,
+    default_signature_id: document.getElementById("set-default-signature").value,
+    default_gst: document.getElementById("set-default-gst").value,
+
+    // EMAIL SETTINGS
+    smtp_host: document.getElementById("smtp-host").value,
+    smtp_port: document.getElementById("smtp-port").value,
+    smtp_username: document.getElementById("smtp-username").value,
+    smtp_password: document.getElementById("smtp-password").value,
+    smtp_from: document.getElementById("smtp-from").value,
+
+    // SHORTCUTS
     shortcuts
   };
+
+  // SAVE THEME TO LOCALSTORAGE
+  localStorage.setItem("crm-theme", data.theme);
 
   fetch("/settings/save", {
     method: "POST",
@@ -147,7 +245,10 @@ function saveSettings() {
     });
 }
 
-// Add Save Button
+
+// ---------------------------------------------
+// ADD SAVE BUTTON
+// ---------------------------------------------
 const footer = document.createElement("div");
 footer.innerHTML = `
   <div class="text-end mt-4">

@@ -1,0 +1,232 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="card shadow">
+  <div class="card-header">
+    <h5><i class="bi bi-pencil-square"></i> Edit Invoice</h5>
+  </div>
+
+  <div class="card-body">
+
+    <form method="POST">
+
+      <!-- Invoice Meta -->
+      <div class="row mb-3">
+
+        <!-- Invoice Type -->
+        <div class="col-md-3">
+          <label class="form-label">Invoice Type</label>
+          <select name="invoice_type" class="form-select" required>
+            <option value="Invoice" {% if invoice.invoice_type == 'Invoice' %}selected{% endif %}>Invoice</option>
+            <option value="Estimate" {% if invoice.invoice_type == 'Estimate' %}selected{% endif %}>Estimate</option>
+            <option value="Quote" {% if invoice.invoice_type == 'Quote' %}selected{% endif %}>Quote</option>
+          </select>
+        </div>
+
+        <!-- Invoice Number -->
+        <div class="col-md-3">
+          <label class="form-label">Invoice Number</label>
+          <input type="text" name="invoice_number" class="form-control"
+                 value="{{ invoice.num }}">
+        </div>
+
+        <!-- Invoice Date -->
+        <div class="col-md-3">
+          <label class="form-label">Invoice Date</label>
+          <input type="date" name="invoice_date" class="form-control"
+                 value="{{ invoice.date }}" required>
+        </div>
+
+        <!-- Vendor -->
+        <div class="col-md-3">
+          <label class="form-label">Vendor</label>
+          <select name="vendor_id" class="form-select" required>
+            {% for v in vendors %}
+              <option value="{{ v.id }}"
+                {% if v.id == invoice.vendor_id %}selected{% endif %}>
+                {{ v.name }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+      </div>
+
+      <!-- GST + Shipping Info -->
+      <div class="row mb-3">
+
+        <!-- GST -->
+        <div class="col-md-3">
+          <label class="form-label">GST Number</label>
+          <select name="gst_number" class="form-select">
+            <option value="">None</option>
+            {% for g in gst_numbers %}
+              <option value="{{ g.gst_number }}"
+                {% if g.gst_number == invoice.gst_number %}selected{% endif %}>
+                {{ g.gst_number }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Shipping Method -->
+        <div class="col-md-3">
+          <label class="form-label">Shipping Method</label>
+          <input type="text" name="ship_method" class="form-control"
+                 value="{{ invoice.ship_method or '' }}">
+        </div>
+
+        <!-- Shipping Terms -->
+        <div class="col-md-3">
+          <label class="form-label">Shipping Terms</label>
+          <input type="text" name="ship_terms" class="form-control"
+                 value="{{ invoice.ship_terms or '' }}">
+        </div>
+
+        <!-- Delivery Date -->
+        <div class="col-md-3">
+          <label class="form-label">Delivery Date</label>
+          <input type="text" id="delivery_date" name="delivery_date"
+                 class="form-control"
+                 value="{{ invoice.delivery_date or 'TBD' }}">
+        </div>
+
+      </div>
+
+      <!-- Comments + Terms -->
+      <div class="mb-3">
+        <label class="form-label">Comments</label>
+        <textarea name="comments" class="form-control" rows="2">{{ invoice.comments }}</textarea>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Terms & Conditions</label>
+        <textarea name="terms_conditions" class="form-control" rows="2">{{ invoice.terms_conditions }}</textarea>
+      </div>
+
+      <!-- Signature / Template -->
+      <div class="row mb-3">
+        <div class="col-md-4">
+          <label class="form-label">Signature</label>
+          <select name="sig_id" class="form-select">
+            <option value="">None</option>
+            {% for s in signatures %}
+              <option value="{{ s.id }}"
+                {% if s.id == invoice.sig_id %}selected{% endif %}>
+                {{ s.name }}{% if s.position %} – {{ s.position }}{% endif %}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label">Template</label>
+          <select name="template" class="form-select">
+            <option value="classic" {% if invoice.template == 'classic' %}selected{% endif %}>Classic</option>
+            <option value="modern" {% if invoice.template == 'modern' %}selected{% endif %}>Modern</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Line Items -->
+      <div class="card mb-3">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <b>Line Items</b>
+          <button type="button" class="btn btn-sm btn-outline-primary" id="addRowBtn">+ Add Row</button>
+        </div>
+
+        <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+          <table class="table table-sm" id="itemsTable">
+            <thead>
+              <tr>
+                <th>Lot #</th>
+                <th>Item</th>
+                <th>Qty</th>
+                <th>Units</th>
+                <th>Unit Price</th>
+                <th>Line Total</th>
+                <th></th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {% for it in invoice_items %}
+              <tr>
+                <td><input type="text" name="lot_number[]" class="form-control" value="{{ it.lot_number }}"></td>
+
+                <td>
+                  <select name="item[]" class="form-select item-select">
+                    <option value="">Select Item</option>
+                    {% for m in items %}
+                      <option value="{{ m.name }}"
+                        {% if m.name == it.item %}selected{% endif %}
+                        data-units="{{ m.default_units }}"
+                        data-price="{{ m.default_price }}">
+                        {{ m.name }}
+                      </option>
+                    {% endfor %}
+                  </select>
+                </td>
+
+                <td><input type="number" name="qty[]" class="form-control qty" step="0.01" value="{{ it.qty }}"></td>
+
+                <td>
+                  <select name="units[]" class="form-select units-select">
+                    <option value="">Select Units</option>
+                    <option value="Grams" {% if it.units == 'Grams' %}selected{% endif %}>Grams</option>
+                    <option value="kg" {% if it.units == 'kg' %}selected{% endif %}>kg</option>
+                    <option value="Units" {% if it.units == 'Units' %}selected{% endif %}>Units</option>
+                  </select>
+                </td>
+
+                <td><input type="number" name="unit_price[]" class="form-control price" step="0.01" value="{{ it.unit_price }}"></td>
+
+                <td><input type="text" class="form-control line-total" readonly></td>
+
+                <td><button type="button" class="btn btn-sm btn-danger removeItem">×</button></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+
+          </table>
+        </div>
+      </div>
+
+      <!-- Totals -->
+      <div class="row mb-3">
+        <div class="col-md-3">
+          <label class="form-label">Subtotal</label>
+          <input type="text" id="subtotal" name="subtotal" class="form-control" value="{{ invoice.subtotal }}" readonly>
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label">Tax Rate (%)</label>
+          <input type="number" name="tax_rate" id="tax_rate" class="form-control" value="{{ invoice.tax_rate }}" step="0.01">
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label">Shipping Cost</label>
+          <input type="number" name="ship_cost" id="ship_cost" class="form-control" value="{{ invoice.ship_cost }}" step="0.01">
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label">Grand Total</label>
+          <input type="text" id="grand_total" name="total" class="form-control" value="{{ invoice.total }}" readonly>
+        </div>
+      </div>
+
+      <input type="hidden" name="tax" id="tax_hidden">
+
+      <div class="text-center">
+        <button type="submit" class="btn btn-primary me-2">Save Changes</button>
+        <a href="{{ url_for('invoice_routes.invoice_list') }}" class="btn btn-secondary">Cancel</a>
+      </div>
+
+    </form>
+
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/invoice.js') }}"></script>
+
+{% endblock %}

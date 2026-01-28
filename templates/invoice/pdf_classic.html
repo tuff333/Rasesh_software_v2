@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Purchase Order {{ invoice.num }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 40px;
+            font-size: 13px;
+            color: #333;
+        }
+
+        h1, h2, h3, h4, h5 {
+            margin: 0;
+            padding: 0;
+        }
+
+        .header-top {
+            border-bottom: 2px solid #27AAE1;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+
+        .header-top h2 {
+            font-size: 22px;
+            color: #27AAE1;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .header-top .company-line {
+            font-size: 11px;
+            margin-top: 4px;
+        }
+
+        .flex-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 40px;
+        }
+
+        .block {
+            margin-bottom: 15px;
+        }
+
+        .block-title {
+            font-weight: bold;
+            font-size: 12px;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+        }
+
+        .block-box {
+            border: 1px solid #ccc;
+            padding: 8px;
+            font-size: 12px;
+            min-height: 60px;
+        }
+
+        .small-text {
+            font-size: 11px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 15px 0;
+            font-size: 12px;
+        }
+
+        .info-col {
+            width: 48%;
+        }
+
+        .info-line {
+            margin-bottom: 3px;
+        }
+
+        .info-label {
+            font-weight: bold;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 12px;
+        }
+
+        th {
+            background: #27AAE1;
+            color: #fff;
+            padding: 6px;
+            text-align: left;
+            border: 1px solid #ccc;
+            font-size: 11px;
+        }
+
+        td {
+            border: 1px solid #ccc;
+            padding: 6px;
+        }
+
+        .totals-wrapper {
+            margin-top: 15px;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .totals-table {
+            width: 260px;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        .totals-table td {
+            border: none;
+            padding: 3px 0;
+        }
+
+        .totals-label {
+            text-align: right;
+            font-weight: bold;
+            padding-right: 10px;
+        }
+
+        .totals-value {
+            text-align: right;
+        }
+
+        .totals-separator {
+            border-top: 1px solid #333;
+            margin: 4px 0;
+        }
+
+        .section {
+            margin-top: 18px;
+            font-size: 12px;
+        }
+
+        .section-title {
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+
+        .section-box {
+            border: 1px solid #ccc;
+            min-height: 40px;
+            padding: 6px;
+        }
+
+        .gst-line {
+            margin-top: 10px;
+            font-size: 11px;
+        }
+
+        .signature-block {
+            margin-top: 35px;
+            display: flex;
+            justify-content: flex-end;
+            font-size: 12px;
+        }
+
+        .signature-right {
+            text-align: center;
+        }
+
+        .signature-image {
+            max-width: 180px;
+            max-height: 80px;
+            margin-bottom: 6px;
+        }
+
+        .signature-name {
+            font-weight: bold;
+            margin-bottom: 2px;
+        }
+
+        .signature-caption {
+            font-size: 11px;
+        }
+
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 10px;
+            color: #777;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- HEADER -->
+    <div class="header-top">
+        <h2>PURCHASE ORDER</h2>
+        <div class="company-line">
+            Medicine Wheel Ranch Inc – 443 North Russell Road – Russell, ON, Canada – K4R 1E5
+        </div>
+    </div>
+
+    <!-- BILL TO / SHIP TO -->
+    <div class="flex-row block">
+        <div style="width: 48%;">
+            <div class="block-title">Bill To</div>
+            <div class="block-box small-text">
+                Medicine Wheel Ranch Inc.<br>
+                443 North Russell Road<br>
+                Russell, ON, K4R 1E5<br>
+                Phone: (613) 266-4806
+            </div>
+        </div>
+
+        <div style="width: 48%;">
+            <div class="block-title">Ship To</div>
+            <div class="block-box small-text">
+                Medicine Wheel Ranch Inc.<br>
+                9-2020 Lanthier Drive, Suite 236<br>
+                Orleans, ON, K4A 3V4<br>
+                Phone: (613) 302-5566
+            </div>
+        </div>
+    </div>
+
+    <!-- VENDOR / SHIPPING / PO INFO -->
+    <div class="info-row">
+        <div class="info-col">
+            <div class="info-line">
+                <span class="info-label">Vendor:</span>
+                {{ vendor.name }}
+            </div>
+            <div class="info-line">
+                <span class="info-label">Shipping Method:</span>
+                {{ invoice.get('ship_method', '') or 'Seller' }}
+            </div>
+            <div class="info-line">
+                <span class="info-label">Shipping Terms:</span>
+                {{ invoice.get('ship_terms', '') or 'Seller' }}
+            </div>
+            <div class="info-line">
+                <span class="info-label">Delivery Date:</span>
+                {{ invoice.get('delivery_date', '') or 'TBD' }}
+            </div>
+        </div>
+
+        <div class="info-col">
+            <div class="info-line">
+                <span class="info-label">P.O. No:</span>
+                {{ invoice.num }}
+            </div>
+            <div class="info-line">
+                <span class="info-label">Date:</span>
+                {{ invoice.date }}
+            </div>
+        </div>
+    </div>
+
+    <!-- LINE ITEMS TABLE -->
+    <table>
+        <thead>
+            <tr>
+                <th>Lot Number</th>
+                <th>Item</th>
+                <th>Qty</th>
+                <th>Units</th>
+                <th>Unit Price</th>
+                <th>Total Price</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for it in items %}
+            <tr>
+                <td>{{ it['lot_number'] }}</td>
+                <td>{{ it['item'] }}</td>
+                <td>{{ "%.2f"|format(it['qty']) }}</td>
+                <td>{{ it['units'] }}</td>
+                <td>${{ "%.2f"|format(it['unit_price']) }}</td>
+                <td>${{ "%.2f"|format(it['line_total']) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- TOTALS -->
+    <div class="totals-wrapper">
+        <table class="totals-table">
+            <tr>
+                <td class="totals-label">Subtotal:</td>
+                <td class="totals-value">${{ "%.2f"|format(invoice.subtotal) }}</td>
+            </tr>
+            <tr>
+                <td class="totals-label">Tax ({{ "%.2f"|format(invoice.tax_rate) }}%):</td>
+                <td class="totals-value">${{ "%.2f"|format(invoice.tax) }}</td>
+            </tr>
+            <tr>
+                <td class="totals-label">Shipping:</td>
+                <td class="totals-value">${{ "%.2f"|format(invoice.get('ship_cost', 0)) }}</td>
+            </tr>
+            <tr>
+                <td colspan="2"><div class="totals-separator"></div></td>
+            </tr>
+            <tr>
+                <td class="totals-label"><strong>Grand Total:</strong></td>
+                <td class="totals-value"><strong>${{ "%.2f"|format(invoice.total) }}</strong></td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- GST LINE -->
+    <div class="gst-line">
+        <strong>HST/GST Registration No.:</strong> 747957900 RT0001
+    </div>
+
+    <!-- COMMENTS -->
+    {% if invoice.get('comments') %}
+    <div class="section">
+        <div class="section-title">Comments</div>
+        <div class="section-box">
+            {{ invoice.comments }}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- TERMS & CONDITIONS -->
+    {% if invoice.get('terms_conditions') %}
+    <div class="section">
+        <div class="section-title">Terms &amp; Conditions</div>
+        <div class="section-box">
+            {{ invoice.terms_conditions }}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- SIGNATURE -->
+    <div class="signature-block">
+        <div class="signature-right">
+            {% if invoice.get('signature_image_path') %}
+                <img src="{{ invoice.signature_image_path }}" class="signature-image">
+            {% endif %}
+            {% if invoice.get('signature_name') %}
+                <div class="signature-name">{{ invoice.signature_name }}</div>
+            {% endif %}
+            <div class="signature-caption">SIGNATURE / APPROVED BY</div>
+        </div>
+    </div>
+
+    <div class="footer">
+        Generated by Rasesh IM PDF CRM Generator
+    </div>
+
+</body>
+</html>

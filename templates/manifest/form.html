@@ -1,15 +1,8 @@
 {% extends 'base.html' %}
 {% block content %}
 
-<!-- ============================================================
-     MANIFEST CREATION FORM
-     - Blue theme
-     - Dynamic line items
-     - Matches backend fields exactly
-   ============================================================ -->
-
 <div class="card shadow">
-  <div class="card-header text-white" style="background:#27AAE1;">
+  <div class="card-header">
     <h5><i class="bi bi-truck"></i> Create Manifest</h5>
   </div>
 
@@ -78,7 +71,7 @@
       <div class="card mb-3">
         <div class="card-header">
           <b>Line Items</b>
-          <button type="button" class="btn btn-sm btn-primary" id="addItem">+ Add</button>
+          <button type="button" class="btn btn-sm btn-primary float-end" id="addItem">+ Add</button>
         </div>
 
         <div class="card-body">
@@ -114,7 +107,6 @@
   </div>
 </div>
 
-<!-- Dynamic row JS -->
 <script>
 document.getElementById('addItem').onclick = () => {
   const tbody = document.querySelector('#itemsTable tbody');

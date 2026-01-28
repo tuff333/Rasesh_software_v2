@@ -1,14 +1,8 @@
 {% extends 'base.html' %}
 {% block content %}
 
-<!-- ============================================================
-     ADD CONTACT FORM
-     - Blue theme
-     - Matches backend fields exactly
-   ============================================================ -->
-
 <div class="card shadow">
-  <div class="card-header text-white" style="background:#27AAE1;">
+  <div class="card-header">
     <h5><i class="bi bi-person-plus"></i> Add Contact</h5>
   </div>
 
@@ -16,6 +10,7 @@
 
     <form method="POST">
 
+      <!-- Name -->
       <div class="row mb-3">
         <div class="col-md-6">
           <label class="form-label">First Name</label>
@@ -28,6 +23,7 @@
         </div>
       </div>
 
+      <!-- Email / Phone -->
       <div class="row mb-3">
         <div class="col-md-6">
           <label class="form-label">Email</label>
@@ -40,6 +36,7 @@
         </div>
       </div>
 
+      <!-- Company / Position -->
       <div class="row mb-3">
         <div class="col-md-6">
           <label class="form-label">Company</label>
@@ -52,16 +49,19 @@
         </div>
       </div>
 
+      <!-- Address -->
       <div class="mb-3">
         <label class="form-label">Address</label>
         <textarea name="address" class="form-control" rows="2"></textarea>
       </div>
 
+      <!-- Notes -->
       <div class="mb-3">
         <label class="form-label">Notes</label>
         <textarea name="notes" class="form-control" rows="3"></textarea>
       </div>
 
+      <!-- Submit -->
       <div class="text-center">
         <button type="submit" class="btn btn-success me-2">Save Contact</button>
       </div>
