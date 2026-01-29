@@ -1,8 +1,0 @@
-{% if invoice.template == "modern" %}
-    {% include "invoice/pdf_modern.html" %}
-{% elif invoice.template == "classic" %}
-    {% include "invoice/pdf_classic.html" %}
-{% else %}
-    {# Fallback to classic if template is missing or unknown #}
-    {% include "invoice/pdf_classic.html" %}
-{% endif %}
