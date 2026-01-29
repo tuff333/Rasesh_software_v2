@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="card shadow" style="max-width: 900px; margin: auto;">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h5><i class="bi bi-intersect"></i> Duplicate Contacts</h5>
+    <a href="{{ url_for('contacts.contacts_list') }}" class="btn btn-sm btn-secondary">
+      <i class="bi bi-arrow-left"></i> Back
+    </a>
+  </div>
+
+  <div class="card-body">
+
+    <p class="text-muted">
+      Duplicates are detected by matching <strong>email</strong> or <strong>phone</strong>.
+      Choose a primary contact and merge others into it.
+    </p>
+
+    <!-- EMAIL DUPLICATES -->
+    <h6 class="mt-3"><i class="bi bi-envelope"></i> By Email</h6>
+
+    {% if email_dups %}
+      {% for group in email_dups %}
+        <div class="border rounded p-3 mb-3">
+          <div class="mb-2">
+            <strong>Email:</strong> {{ group.key }}
+          </div>
+
+          <form method="POST" action="{{ url_for('contacts.merge_contacts') }}">
+            <input type="hidden" name="merge_ids" value="{{ group.ids | join(',') }}">
+
+            <div class="table-responsive">
+              <table class="table table-sm align-middle">
+                <thead>
+                  <tr>
+                    <th>Primary</th>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Company</th>
+                    <th>Phone</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for cid in group.ids %}
+                  <tr>
+                    <td>
+                      <input type="radio" name="primary_id" value="{{ cid }}" {% if loop.first %}checked{% endif %}>
+                    </td>
+                    <td>{{ cid }}</td>
+                    <td>
+                      <a href="{{ url_for('contacts.view_contact', id=cid) }}">
+                        Contact #{{ cid }}
+                      </a>
+                    </td>
+                    <td>
+                      {{ contacts_map[cid].company_contact if contacts_map and cid in contacts_map else '' }}
+                    </td>
+                    <td>
+                      {{ contacts_map[cid].phone_contact if contacts_map and cid in contacts_map else '' }}
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+
+            <button class="btn btn-sm btn-primary mt-2">
+              <i class="bi bi-arrow-merge"></i> Merge Selected
+            </button>
+          </form>
+        </div>
+      {% endfor %}
+    {% else %}
+      <p class="text-muted">No duplicate emails found.</p>
+    {% endif %}
+
+    <hr>
+
+    <!-- PHONE DUPLICATES -->
+    <h6 class="mt-3"><i class="bi bi-telephone"></i> By Phone</h6>
+
+    {% if phone_dups %}
+      {% for group in phone_dups %}
+        <div class="border rounded p-3 mb-3">
+          <div class="mb-2">
+            <strong>Phone:</strong> {{ group.key }}
+          </div>
+
+          <form method="POST" action="{{ url_for('contacts.merge_contacts') }}">
+            <input type="hidden" name="merge_ids" value="{{ group.ids | join(',') }}">
+
+            <div class="table-responsive">
+              <table class="table table-sm align-middle">
+                <thead>
+                  <tr>
+                    <th>Primary</th>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Company</th>
+                    <th>Email</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for cid in group.ids %}
+                  <tr>
+                    <td>
+                      <input type="radio" name="primary_id" value="{{ cid }}" {% if loop.first %}checked{% endif %}>
+                    </td>
+                    <td>{{ cid }}</td>
+                    <td>
+                      <a href="{{ url_for('contacts.view_contact', id=cid) }}">
+                        Contact #{{ cid }}
+                      </a>
+                    </td>
+                    <td>
+                      {{ contacts_map[cid].company_contact if contacts_map and cid in contacts_map else '' }}
+                    </td>
+                    <td>
+                      {{ contacts_map[cid].email_contact if contacts_map and cid in contacts_map else '' }}
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+
+            <button class="btn btn-sm btn-primary mt-2">
+              <i class="bi bi-arrow-merge"></i> Merge Selected
+            </button>
+          </form>
+        </div>
+      {% endfor %}
+    {% else %}
+      <p class="text-muted">No duplicate phone numbers found.</p>
+    {% endif %}
+
+  </div>
+</div>
+
+{% endblock %}

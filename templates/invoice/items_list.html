@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="card shadow">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h5 class="mb-0">Items</h5>
+
+    <div class="d-flex gap-2">
+      <input type="text" id="itemSearch" class="form-control form-control-sm" placeholder="Search items..." style="width: 180px;">
+      <a href="{{ url_for('invoice_items.items_add') }}" class="btn btn-success btn-sm">+ Add Item</a>
+    </div>
+  </div>
+
+  <div class="card-body">
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, msg in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ msg }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    {% if items %}
+
+    <div class="table-responsive">
+      <table class="table table-hover align-middle" id="itemsTable">
+        <thead class="table-dark">
+          <tr>
+            <th>Name</th>
+            <th>Default Units</th>
+            <th>Default Price</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {% for i in items %}
+          <tr>
+            <td class="item-name">{{ i.name }}</td>
+            <td>{{ i.default_units or '-' }}</td>
+            <td>${{ "%.2f"|format(i.default_price or 0) }}</td>
+
+            <td class="text-end">
+              <div class="btn-group">
+                <a href="{{ url_for('invoice_items.items_edit', item_id=i.id) }}"
+                   class="btn btn-sm btn-outline-primary">
+                  Edit
+                </a>
+
+                <a href="{{ url_for('invoice_items.items_delete', item_id=i.id) }}"
+                   class="btn btn-sm btn-outline-danger"
+                   onclick="return confirm('Delete this item?');">
+                  Delete
+                </a>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% else %}
+      <div class="text-center text-muted py-4">
+        <p class="mb-1">No items found.</p>
+        <p class="small">Click “Add Item” to create your first item.</p>
+      </div>
+    {% endif %}
+
+  </div>
+</div>
+
+<!-- Search Filter Script -->
+<script>
+document.getElementById("itemSearch").addEventListener("input", function () {
+  const filter = this.value.toLowerCase();
+  const rows = document.querySelectorAll("#itemsTable tbody tr");
+
+  rows.forEach(row => {
+    const name = row.querySelector(".item-name").textContent.toLowerCase();
+    row.style.display = name.includes(filter) ? "" : "none";
+  });
+});
+</script>
+
+{% endblock %}

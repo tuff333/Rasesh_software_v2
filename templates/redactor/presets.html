@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="card shadow">
+  <div class="card-header">
+    <h5><i class="bi bi-funnel"></i> Redaction Presets</h5>
+  </div>
+
+  <div class="card-body">
+
+    <!-- Add preset form -->
+    <form method="POST" class="mb-3">
+      <div class="row">
+        <div class="col-md-5">
+          <input type="text"
+                 name="name"
+                 class="form-control"
+                 placeholder="Preset name (e.g. 'Legal Contacts')"
+                 required>
+        </div>
+        <div class="col-md-5">
+          <input type="text"
+                 name="terms"
+                 class="form-control"
+                 placeholder="Terms (comma-separated)"
+                 required>
+        </div>
+        <div class="col-md-2">
+          <button type="submit" class="btn btn-primary w-100">
+            Save
+          </button>
+        </div>
+      </div>
+    </form>
+
+    <!-- Presets table -->
+    <div class="table-responsive">
+      <table class="table table-hover">
+        <thead class="table-dark">
+          <tr>
+            <th>Name</th>
+            <th>Terms</th>
+            <th style="width: 80px;"></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in presets %}
+          <tr>
+            <td>{{ p[1] }}</td>
+            <td>{{ p[2] }}</td>
+            <td>
+              <form method="POST"
+                    action="{{ url_for('redactor_preset_delete', id=p[0]) }}"
+                    onsubmit="return confirm('Delete this preset?');">
+                <button class="btn btn-sm btn-danger">
+                  Delete
+                </button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+{% endblock %}

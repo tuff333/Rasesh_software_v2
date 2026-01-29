@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="card shadow">
+  <div class="card-header">
+    <h5>
+      {% if contact %}
+        <i class="bi bi-pencil"></i> Edit Contact
+      {% else %}
+        <i class="bi bi-person-plus"></i> Add Contact
+      {% endif %}
+    </h5>
+  </div>
+
+  <div class="card-body">
+
+    <form method="POST" enctype="multipart/form-data">
+
+      <!-- Name -->
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <label class="form-label">First Name</label>
+          <input type="text" name="first_name" class="form-control"
+                 value="{{ contact.first_name_contact if contact else '' }}" required>
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Last Name</label>
+          <input type="text" name="last_name" class="form-control"
+                 value="{{ contact.last_name_contact if contact else '' }}" required>
+        </div>
+      </div>
+
+      <!-- Email / Phone -->
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <label class="form-label">Email</label>
+          <input type="email" name="email" class="form-control"
+                 value="{{ contact.email_contact if contact else '' }}">
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Phone</label>
+          <input type="text" name="phone" class="form-control"
+                 value="{{ contact.phone_contact if contact else '' }}">
+        </div>
+      </div>
+
+      <!-- Company / Position -->
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <label class="form-label">Company</label>
+          <input type="text" name="company" class="form-control"
+                 value="{{ contact.company_contact if contact else '' }}">
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Role / Title</label>
+          <input type="text" name="position" class="form-control"
+                 value="{{ contact.position_contact if contact else '' }}">
+        </div>
+      </div>
+
+      <!-- Website -->
+      <div class="mb-3">
+        <label class="form-label">Website</label>
+        <input type="text" name="website" class="form-control"
+               value="{{ contact.website_contact if contact else '' }}"
+               placeholder="https://example.com">
+      </div>
+
+      <!-- Tags -->
+      <div class="mb-3">
+        <label class="form-label">Tags / Categories</label>
+        <input type="text" name="tags" class="form-control"
+               value="{{ tags_csv if tags_csv else '' }}"
+               placeholder="e.g. VIP, Supplier, Internal">
+        <small class="text-muted">Comma-separated (e.g. VIP, Supplier, Internal)</small>
+      </div>
+
+      <!-- Address -->
+      <div class="mb-3">
+        <label class="form-label">Address</label>
+        <textarea name="address" class="form-control" rows="2">{{ contact.address_contact if contact else '' }}</textarea>
+      </div>
+
+      <!-- Notes -->
+      <div class="mb-3">
+        <label class="form-label">Notes</label>
+        <textarea name="notes" class="form-control" rows="3">{{ contact.notes_contact if contact else '' }}</textarea>
+      </div>
+
+      <hr>
+
+      <!-- Business Card -->
+      <h5 class="mb-3"><i class="bi bi-credit-card"></i> Business Card</h5>
+
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <label class="form-label">Front</label>
+          <input type="file" name="business_card_front" class="form-control" accept="image/*,application/pdf">
+
+          {% if contact and contact.business_card_front_contact %}
+            <div class="mt-2">
+              <small class="text-muted">Current:</small><br>
+              {% if contact.business_card_front_contact.endswith('.pdf') %}
+                <a href="/{{ contact.business_card_front_contact }}" target="_blank">View PDF</a>
+              {% else %}
+                <img src="/{{ contact.business_card_front_contact }}" class="img-fluid rounded border" style="max-height:150px;">
+              {% endif %}
+            </div>
+          {% endif %}
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Back</label>
+          <input type="file" name="business_card_back" class="form-control" accept="image/*,application/pdf">
+
+          {% if contact and contact.business_card_back_contact %}
+            <div class="mt-2">
+              <small class="text-muted">Current:</small><br>
+              {% if contact.business_card_back_contact.endswith('.pdf') %}
+                <a href="/{{ contact.business_card_back_contact }}" target="_blank">View PDF</a>
+              {% else %}
+                <img src="/{{ contact.business_card_back_contact }}" class="img-fluid rounded border" style="max-height:150px;">
+              {% endif %}
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <hr>
+
+      <!-- Face + Logo -->
+      <h5 class="mb-3"><i class="bi bi-image"></i> Images</h5>
+
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <label class="form-label">Face Image</label>
+          <input type="file" name="face_image" class="form-control" accept="image/*">
+
+          {% if contact and contact.face_image_contact %}
+            <div class="mt-2">
+              <small class="text-muted">Current:</small><br>
+              <img src="/{{ contact.face_image_contact }}" class="img-fluid rounded border" style="max-height:150px;">
+            </div>
+          {% endif %}
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Company Logo</label>
+          <input type="file" name="company_logo" class="form-control" accept="image/*">
+
+          {% if contact and contact.company_logo_contact %}
+            <div class="mt-2">
+              <small class="text-muted">Current:</small><br>
+              <img src="/{{ contact.company_logo_contact }}" class="img-fluid rounded border" style="max-height:150px;">
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Submit -->
+      <div class="text-center">
+        <button type="submit" class="btn btn-success me-2">
+          {% if contact %} Update Contact {% else %} Save Contact {% endif %}
+        </button>
+      </div>
+
+    </form>
+
+  </div>
+</div>
+
+{% endblock %}

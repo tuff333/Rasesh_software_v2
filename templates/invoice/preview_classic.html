@@ -1,0 +1,177 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Invoice {{ invoice['num'] }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/print.css') }}">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 40px;
+      font-size: 13px;
+      color: #333;
+    }
+    h2 {
+      color: #27AAE1;
+      margin-bottom: 5px;
+      text-transform: uppercase;
+    }
+    .hdr {
+      border-bottom: 2px solid #27AAE1;
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+    }
+    h5 {
+      margin: 0 0 5px 0;
+      font-size: 14px;
+      color: #27AAE1;
+      text-transform: uppercase;
+    }
+    .flex-between {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+      font-size: 12px;
+    }
+    th {
+      background: #27AAE1;
+      color: #fff;
+      padding: 6px;
+      border: 1px solid #ccc;
+      text-align: left;
+    }
+    td {
+      border: 1px solid #ccc;
+      padding: 6px;
+    }
+    .totals {
+      margin-top: 20px;
+      width: 260px;
+      float: right;
+      font-size: 12px;
+    }
+    .totals .row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+    .totals hr {
+      border-top: 1px solid #333;
+      margin: 6px 0;
+    }
+    .sig {
+      margin-top: 20px;
+      font-size: 12px;
+      text-align: left;
+    }
+    .sig-img {
+      width: 180px;
+      height: auto;
+      margin-bottom: 5px;
+    }
+    .no-print {
+      margin-top: 30px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="hdr">
+    <h2>PURCHASE ORDER – {{ invoice['num'] }}</h2>
+  </div>
+
+  <div class="flex-between">
+    <div>
+      <h5>Bill To</h5>
+      <p>{{ invoice['ca'] or 'Medicine Wheel Ranch Inc.<br>443 North Russell Road, Russell, ON K4R 1E5' }}</p>
+    </div>
+
+    <div>
+      <h5>Ship To</h5>
+      <p>Medicine Wheel Ranch Inc.<br>9-2020 Lanthier Dr, Suite 236, Orleans, ON K4A 3V4</p>
+    </div>
+  </div>
+
+  <p>
+    <b>Vendor:</b> {{ invoice['vn'] }} &nbsp; | &nbsp;
+    <b>PO #:</b> {{ invoice['num'] }} &nbsp; | &nbsp;
+    <b>Date:</b> {{ invoice['date'] }}
+  </p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Lot #</th>
+        <th>Item</th>
+        <th>Qty</th>
+        <th>Units</th>
+        <th>Unit Price</th>
+        <th>Total</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      {% for it in items %}
+      <tr>
+        <td>{{ it.lot_number }}</td>
+        <td>{{ it.item }}</td>
+        <td>{{ it.qty }}</td>
+        <td>{{ it.units }}</td>
+        <td>${{ "%.2f"|format(it.unit_price) }}</td>
+        <td>${{ "%.2f"|format(it.total) }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div class="totals">
+
+    <div class="row">
+      <span>Subtotal:</span>
+      <span>${{ "%.2f"|format(invoice.subtotal) }}</span>
+    </div>
+
+    <div class="row">
+      <span>Tax:</span>
+      <span>{{ invoice.tax_rate }}% (${{ "%.2f"|format(invoice.tax) }})</span>
+    </div>
+
+    <div class="row">
+      <span>Shipping:</span>
+      <span>${{ "%.2f"|format(invoice.ship_cost) }}</span>
+    </div>
+
+    <hr>
+
+    <div class="row total">
+      <b>Grand Total:</b>
+      <b>${{ "%.2f"|format(invoice.total) }}</b>
+    </div>
+
+    {% if invoice.signature_image_path %}
+    <div class="sig">
+      <img src="/{{ invoice.signature_image_path }}" class="sig-img">
+      <br>{{ invoice.signature_name }}
+      <br><em>Approved / Authorized by</em>
+    </div>
+    {% endif %}
+
+  </div>
+
+  <div class="no-print">
+    <a href="javascript:window.print()" class="btn btn-primary me-2">Print</a>
+
+    <a href="{{ url_for('invoice_routes.invoice_download', filename=invoice.pdf) }}"
+       class="btn btn-success">
+      Download PDF
+    </a>
+  </div>
+
+</body>
+</html>

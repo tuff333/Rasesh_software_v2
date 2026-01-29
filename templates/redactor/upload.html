@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="card shadow">
+  <div class="card-header">
+    <h5><i class="bi bi-file-earmark-arrow-up"></i> PDF Redaction Tool</h5>
+  </div>
+
+  <div class="card-body">
+
+    <!-- Upload options -->
+    <div class="mb-3 d-flex align-items-center">
+      <div class="form-check form-switch me-3">
+        <input class="form-check-input" type="checkbox" id="uploadToRedaction" checked>
+        <label class="form-check-label" for="uploadToRedaction">
+          Save uploads in <b>Redaction</b> folder
+        </label>
+      </div>
+    </div>
+
+    <!-- Upload Area -->
+    <div class="upload-area" id="uploadArea">
+      <i class="bi bi-cloud-upload" style="font-size: 48px; color: #27AAE1;"></i>
+      <h5>Drag & Drop PDF Here</h5>
+      <p>or</p>
+
+      <input type="file" id="pdfUpload" accept=".pdf" style="display:none;">
+
+      <button class="btn btn-primary"
+              onclick="document.getElementById('pdfUpload').click()">
+        Browse Files
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- Upload Overlay -->
+<div class="upload-overlay" id="uploadOverlay">
+  <div class="upload-overlay-inner">
+    <div class="upload-spinner"></div>
+    <div style="font-weight:600; letter-spacing:0.5px;">Please wait, Rasesh…</div>
+    <div style="font-size:12px; margin-top:4px; color:#ccc;">
+      We’re preparing your document for redaction.
+    </div>
+  </div>
+</div>
+
+<script>
+const uploadArea    = document.getElementById('uploadArea');
+const fileInput     = document.getElementById('pdfUpload');
+const uploadSwitch  = document.getElementById('uploadToRedaction');
+const uploadOverlay = document.getElementById('uploadOverlay');
+
+function showOverlay() {
+  uploadOverlay.style.display = 'flex';
+}
+function hideOverlay() {
+  uploadOverlay.style.display = 'none';
+}
+
+fileInput.addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (file) uploadPDF(file);
+});
+
+uploadArea.addEventListener('dragover', e => {
+  e.preventDefault();
+  uploadArea.style.background = '#e6f5fc';
+});
+
+uploadArea.addEventListener('dragleave', () => {
+  uploadArea.style.background = '';
+});
+
+uploadArea.addEventListener('drop', e => {
+  e.preventDefault();
+  uploadArea.style.background = '';
+  const file = e.dataTransfer.files[0];
+  if (file) uploadPDF(file);
+});
+
+function uploadPDF(file) {
+  if (file.type !== 'application/pdf') {
+    alert('Please upload a PDF file.');
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append('pdf', file);
+
+  const module = uploadSwitch.checked ? 'redaction' : 'default';
+
+  showOverlay();
+
+  fetch(`/redactor/upload?module=${encodeURIComponent(module)}`, {
+    method: 'POST',
+    body: formData
+  })
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        window.location.href = `/redactor/viewer/${data.filename}`;
+      } else {
+        hideOverlay();
+        alert('Upload failed: ' + data.error);
+      }
+    })
+    .catch(() => {
+      hideOverlay();
+      alert('Upload failed.');
+    });
+}
+</script>
+
+{% endblock %}

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title if title else "Rasesh CRM" }}</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+
+    <style>
+        body {
+            background-color: #f5f6fa;
+        }
+        .navbar-brand {
+            font-weight: bold;
+            letter-spacing: 0.5px;
+        }
+        .content-wrapper {
+            padding: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+    <div class="container-fluid">
+
+        <!-- Brand -->
+        <a class="navbar-brand" href="{{ url_for('dashboard') }}">
+            <i class="bi bi-speedometer2"></i> Rasesh CRM
+        </a>
+
+        <!-- Hamburger -->
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                data-bs-target="#mainNavbar" aria-controls="mainNavbar"
+                aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <!-- Menu Items -->
+        <div class="collapse navbar-collapse" id="mainNavbar">
+            <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+
+                <!-- Dashboard -->
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('dashboard') }}">
+                        <i class="bi bi-house"></i> Dashboard
+                    </a>
+                </li>
+
+                <!-- Contacts -->
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('contacts.contacts_list') }}">
+                        <i class="bi bi-people"></i> Contacts
+                    </a>
+                </li>
+
+                <!-- Invoices -->
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('invoice_routes.invoice_list') }}">
+                        <i class="bi bi-journal-text"></i> Invoices
+                    </a>
+                </li>
+
+                <!-- Redactor -->
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('redactor.upload_page') }}">
+                        <i class="bi bi-pencil-square"></i> Redactor
+                    </a>
+                </li>
+
+                <!-- Manifest -->
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('manifest.manifest_registry') }}">
+                        <i class="bi bi-box-seam"></i> Manifest
+                    </a>
+                </li>
+
+                <!-- Settings -->
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('settings_page') }}">
+                        <i class="bi bi-gear"></i> Settings
+                    </a>
+                </li>
+
+                <!-- Signatures -->
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('signature.signature_list') }}">
+                        <i class="bi bi-pen"></i> Signatures
+                    </a>
+                </li>
+
+                <!-- GST -->
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('gst.gst_list') }}">
+                        <i class="bi bi-receipt"></i> GST
+                    </a>
+                </li>
+
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- MAIN CONTENT -->
+<div class="content-wrapper container-fluid">
+    {% block content %}{% endblock %}
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>
