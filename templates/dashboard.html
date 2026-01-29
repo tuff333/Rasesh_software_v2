@@ -20,7 +20,7 @@
 
     <!-- INVOICE -->
     <div class="col-md-3">
-      <a href="{{ url_for('invoice.invoice_list') }}" class="text-decoration-none">
+      <a href="{{ url_for('invoice_routes.invoice_list') }}" class="text-decoration-none">
         <div class="card shadow-sm border-success">
           <div class="card-body text-center">
             <i class="bi bi-journal-text fs-1 text-success"></i>
@@ -93,7 +93,7 @@
 
             <td>
               {% if inv.pdf %}
-                <a href="{{ url_for('invoice.invoice_download', filename=inv.pdf) }}"
+                <a href="{{ url_for('invoice_routes.invoice_download', filename=inv.pdf) }}"
                    class="btn btn-sm btn-outline-primary">
                   <i class="bi bi-file-earmark-pdf"></i>
                 </a>
@@ -113,21 +113,21 @@
 
                   <li>
                     <a class="dropdown-item"
-                       href="{{ url_for('invoice.invoice_view', invoice_id=inv.id) }}">
+                       href="{{ url_for('invoice_routes.invoice_view', invoice_id=inv.id) }}">
                       View
                     </a>
                   </li>
 
                   <li>
                     <a class="dropdown-item"
-                       href="{{ url_for('invoice.invoice_edit', invoice_id=inv.id) }}">
+                       href="{{ url_for('invoice_routes.invoice_edit', invoice_id=inv.id) }}">
                       Edit
                     </a>
                   </li>
 
                   <li>
                     <a class="dropdown-item"
-                       href="{{ url_for('invoice.invoice_duplicate', invoice_id=inv.id) }}">
+                       href="{{ url_for('invoice_routes.invoice_duplicate', invoice_id=inv.id) }}">
                       Duplicate
                     </a>
                   </li>
@@ -135,10 +135,14 @@
                   <li><hr class="dropdown-divider"></li>
 
                   <li>
-                    <a class="dropdown-item"
-                       href="{{ url_for('invoice.invoice_download', filename=inv.pdf) }}">
-                      Download PDF
-                    </a>
+                    {% if inv.pdf %}
+                      <a class="dropdown-item"
+                         href="{{ url_for('invoice_routes.invoice_download', filename=inv.pdf) }}">
+                        Download PDF
+                      </a>
+                    {% else %}
+                      <span class="dropdown-item text-muted">No PDF</span>
+                    {% endif %}
                   </li>
 
                   <li>
@@ -152,7 +156,7 @@
 
                   <li>
                     <form method="POST"
-                          action="{{ url_for('invoice.invoice_delete', invoice_id=inv.id) }}"
+                          action="{{ url_for('invoice_routes.invoice_delete', invoice_id=inv.id) }}"
                           onsubmit="return confirm('Delete this invoice?');">
                       <button class="dropdown-item text-danger" type="submit">
                         Delete
