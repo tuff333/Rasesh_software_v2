@@ -8,11 +8,11 @@ echo 📊 Starting server...
 echo.
 
 REM ---------------------------------------------------------
-REM Create virtual environment if missing
+REM Create virtual environment if missing (USE python, NOT py)
 REM ---------------------------------------------------------
 IF NOT EXIST venv (
-    echo Creating virtual environment...
-    py -3 -m venv venv
+    echo Creating virtual environment using Python 3.11...
+    python -m venv venv
 )
 
 REM ---------------------------------------------------------
@@ -34,10 +34,10 @@ REM ---------------------------------------------------------
 start "" http://localhost:5000/
 
 REM ---------------------------------------------------------
-REM Run the application using the VENV Python
+REM Run the application using the VENV Python (ALWAYS CORRECT)
 REM ---------------------------------------------------------
 echo Starting Flask server...
-python app.py
+venv\Scripts\python.exe app.py
 
 echo.
 echo Server stopped.

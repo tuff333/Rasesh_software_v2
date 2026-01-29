@@ -1,0 +1,7 @@
+path: ../../training_data/yolo_dataset
+
+train: images
+val: images
+
+names:
+  0: sensitive
