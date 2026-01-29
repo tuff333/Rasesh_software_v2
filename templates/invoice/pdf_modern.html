@@ -293,7 +293,8 @@
     <!-- SIGNATURE (FIXED + MOVED BELOW TOTALS) -->
     <div class="signature-block">
         {% if invoice.signature_image_path %}
-            <img src="{{ invoice.signature_image_path }}" class="signature-image">
+            <img src="{{ url_for('static', filename=invoice.signature_image_path.replace('static/', ''), _external=True) }}"
+                class="signature-image">
         {% endif %}
         {% if invoice.signature_name %}
             <div class="signature-name">{{ invoice.signature_name }}</div>
