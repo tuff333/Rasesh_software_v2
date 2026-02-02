@@ -10,7 +10,7 @@
    - Multi-page preview
    - Viewer tips
    - Keyboard shortcuts (from settings)
-   - Redaction templates (save/apply)
+   - Redaction templates (save/load/edit/apply)
    ============================================================ */
 
 let filename = window.filename || '{{ filename }}';
@@ -794,4 +794,77 @@ if (applyTemplateAllBtn) {
 const applyTemplatePageBtn = document.getElementById('applyTemplatePageBtn');
 if (applyTemplatePageBtn) {
   applyTemplatePageBtn.onclick = () => applyTemplate('page');
+}
+
+/* ============================================================
+   REDACTION TEMPLATES — LOAD FOR EDITING / OVERWRITE
+   ============================================================ */
+
+function loadTemplateForEditing() {
+  const sel = document.getElementById('templateSelect');
+  if (!sel || !sel.value) {
+    alert("Select a template first.");
+    return;
+  }
+
+  const templateId = parseInt(sel.value, 10);
+  if (!templateId) {
+    alert("Invalid template.");
+    return;
+  }
+
+  fetch(`/redactor/template/load/${templateId}`)
+    .then(r => r.json())
+    .then(d => {
+      if (!d.success) {
+        alert("Failed to load template: " + (d.error || "Unknown error"));
+        return;
+      }
+
+      previewBoxes = d.boxes || [];
+      drawOverlay();
+      alert("Template loaded into preview. Edit boxes, then click 'Overwrite Template'.");
+    });
+}
+
+function overwriteTemplate() {
+  const sel = document.getElementById('templateSelect');
+  if (!sel || !sel.value) {
+    alert("Select a template first.");
+    return;
+  }
+
+  const templateId = parseInt(sel.value, 10);
+  if (!templateId) {
+    alert("Invalid template.");
+    return;
+  }
+
+  fetch('/redactor/template/update', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      template_id: templateId,
+      filename
+    })
+  })
+    .then(r => r.json())
+    .then(d => {
+      if (!d.success) {
+        alert("Failed to update template: " + (d.error || "Unknown error"));
+        return;
+      }
+      alert("Template updated successfully.");
+      loadTemplates();
+    });
+}
+
+const loadTemplateBtn = document.getElementById('loadTemplateBtn');
+if (loadTemplateBtn) {
+  loadTemplateBtn.onclick = () => loadTemplateForEditing();
+}
+
+const overwriteTemplateBtn = document.getElementById('overwriteTemplateBtn');
+if (overwriteTemplateBtn) {
+  overwriteTemplateBtn.onclick = () => overwriteTemplate();
 }
