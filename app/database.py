@@ -121,6 +121,7 @@ def init_db():
             )
         """)
 
+        # CONTACT MIGRATIONS
         existing_contact_cols = {
             row[1] for row in c.execute("PRAGMA table_info(contacts);").fetchall()
         }
@@ -146,7 +147,7 @@ def init_db():
                 c.execute(f"ALTER TABLE contacts ADD COLUMN {col} {col_type};")
 
         # -------------------------
-        # CONTACT NOTES (timeline)
+        # CONTACT NOTES
         # -------------------------
         c.execute("""
             CREATE TABLE IF NOT EXISTS contact_notes (
@@ -193,7 +194,7 @@ def init_db():
         """)
 
         # -------------------------
-        # GST NUMBERS (UPDATED)
+        # GST
         # -------------------------
         c.execute("""
             CREATE TABLE IF NOT EXISTS gst (
@@ -240,18 +241,48 @@ def init_db():
         """)
 
         # -------------------------
-        # REDACTION LOGS
+        # REDACTIONS (UPDATED)
         # -------------------------
         c.execute("""
             CREATE TABLE IF NOT EXISTS redactions (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 filename TEXT,
+                output_file TEXT,
+                changes TEXT,
                 timestamp TEXT
             )
         """)
 
+        # MIGRATE missing columns
+        existing_redaction_cols = {
+            row[1] for row in c.execute("PRAGMA table_info(redactions);").fetchall()
+        }
+
+        required_redaction_cols = {
+            "output_file": "TEXT",
+            "changes": "TEXT"
+        }
+
+        for col, col_type in required_redaction_cols.items():
+            if col not in existing_redaction_cols:
+                c.execute(f"ALTER TABLE redactions ADD COLUMN {col} {col_type};")
+
         # -------------------------
-        # SCHEMA ALIGNMENT / MIGRATIONS
+        # REDACTION TEMPLATES
+        # -------------------------
+        c.execute("""
+            CREATE TABLE IF NOT EXISTS redaction_templates (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                company TEXT,
+                doc_type TEXT,
+                boxes_json TEXT NOT NULL,
+                created_at TEXT
+            )
+        """)
+
+        # -------------------------
+        # INVOICE MIGRATIONS
         # -------------------------
         existing_cols = {
             row[1] for row in c.execute("PRAGMA table_info(invoices);").fetchall()
