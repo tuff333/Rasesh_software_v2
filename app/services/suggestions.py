@@ -24,8 +24,6 @@ from PIL import Image
 
 from app.services.ocr import ocr_page
 
-# These imports assume you installed:
-#   pip install spacy ultralytics
 try:
     import spacy
     from ultralytics import YOLO
@@ -34,11 +32,13 @@ except ImportError:
     YOLO = None
 
 # -------------------------------------------------------------------
-# MODEL PATHS – ADJUST IF YOUR FILE NAMES DIFFER
+# MODEL PATHS – YOUR TRAINED MODELS
 # -------------------------------------------------------------------
+# spaCy: use the trained pipeline directory (model-best)
+SPACY_MODEL_DIR = r"C:\projects\Rasesh_software\Ai\trained_model\spacy\model-best"
 
-SPACY_MODEL_DIR = r"C:\projects\Rasesh_software\Ai\trained_model\spacy"
-YOLO_MODEL_PATH = r"C:\projects\Rasesh_software\Ai\trained_model\yolo\best.pt"
+# YOLO: use the trained weights file
+YOLO_MODEL_PATH = r"C:\projects\Rasesh_software\Ai\trained_model\yolo\sensitive_yolo2\weights\best.pt"
 
 _nlp = None
 _yolo_model = None
@@ -54,16 +54,28 @@ def _load_models():
     if spacy is None or YOLO is None:
         return
 
+    # spaCy
     if _nlp is None:
         try:
-            _nlp = spacy.load(SPACY_MODEL_DIR)
-        except Exception:
+            if os.path.isdir(SPACY_MODEL_DIR):
+                _nlp = spacy.load(SPACY_MODEL_DIR)
+            else:
+                print("❌ spaCy model directory not found:", SPACY_MODEL_DIR)
+                _nlp = None
+        except Exception as e:
+            print("❌ spaCy load error:", e)
             _nlp = None
 
+    # YOLO
     if _yolo_model is None:
         try:
-            _yolo_model = YOLO(YOLO_MODEL_PATH)
-        except Exception:
+            if os.path.exists(YOLO_MODEL_PATH):
+                _yolo_model = YOLO(YOLO_MODEL_PATH)
+            else:
+                print("❌ YOLO weights not found:", YOLO_MODEL_PATH)
+                _yolo_model = None
+        except Exception as e:
+            print("❌ YOLO load error:", e)
             _yolo_model = None
 
 
@@ -78,7 +90,8 @@ def _page_image(doc, page_index, dpi=150):
         img_bytes = pix.tobytes("png")
         img = Image.open(io.BytesIO(img_bytes)).convert("RGB")
         return img
-    except Exception:
+    except Exception as e:
+        print("❌ Page render error:", e)
         return None
 
 
@@ -95,7 +108,8 @@ def _run_yolo_on_page(img, page_index):
     try:
         arr = np.array(img)
         results = _yolo_model(arr)
-    except Exception:
+    except Exception as e:
+        print("❌ YOLO inference error:", e)
         return []
 
     if not results:
@@ -137,7 +151,8 @@ def _run_spacy_on_page(text, page_index):
 
     try:
         doc = _nlp(text)
-    except Exception:
+    except Exception as e:
+        print("❌ spaCy inference error:", e)
         return []
 
     suggestions = []
@@ -165,17 +180,20 @@ def extract_suggestions(pdf_path, use_ocr=False):
     Returns a flat list of suggestion dicts.
     """
     if not os.path.exists(pdf_path):
+        print("❌ PDF not found:", pdf_path)
         return []
 
     _load_models()
 
     # If both models failed to load, just return empty.
     if _nlp is None and _yolo_model is None:
+        print("❌ No AI models loaded.")
         return []
 
     try:
         doc = fitz.open(pdf_path)
-    except Exception:
+    except Exception as e:
+        print("❌ PDF open error:", e)
         return []
 
     all_suggestions = []
@@ -199,8 +217,8 @@ def extract_suggestions(pdf_path, use_ocr=False):
                     ocr_text = ocr_page(pdf_path, p)
                     if ocr_text:
                         text = text + "\n" + ocr_text
-                except Exception:
-                    pass
+                except Exception as e:
+                    print("❌ OCR error:", e)
 
             # YOLO suggestions (area-based)
             all_suggestions.extend(_run_yolo_on_page(img, p))

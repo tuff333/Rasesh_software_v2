@@ -16,6 +16,8 @@ def log_redaction(original, redacted, changes):
     """
     Log a redaction event into the database.
     Stores original filename, redacted filename, JSON changes, and timestamp.
+    Matches the schema in database.py:
+        redactions(filename, output_file, changes, timestamp)
     """
 
     timestamp = datetime.now().isoformat(timespec="seconds")
@@ -23,14 +25,14 @@ def log_redaction(original, redacted, changes):
     with get_conn() as conn:
         conn.execute(
             """
-            INSERT INTO redactions (filename, redacted_file, changes, timestamp)
+            INSERT INTO redactions (filename, output_file, changes, timestamp)
             VALUES (?, ?, ?, ?)
             """,
             (
                 original,
                 redacted,
                 json.dumps(changes),
-                timestamp
-            )
+                timestamp,
+            ),
         )
         conn.commit()
