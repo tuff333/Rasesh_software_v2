@@ -184,14 +184,42 @@ if (pageJumpGo && pageJumpInput) {
 }
 
 /* ============================================================
-   DRAW AREA REDACTION (Preview Mode)
+   DRAW AREA REDACTION (Preview Mode) — WITH LIVE OUTLINE
    ============================================================ */
+
+let liveBox = null;   // temporary red outline div
 
 canv.onmousedown = e => {
   const r = canv.getBoundingClientRect();
   drawing = true;
-  startX = e.clientX - r.left;
-  startY = e.clientY - r.top;
+  startX = (e.clientX - r.left) / zoom;
+  startY = (e.clientY - r.top) / zoom;
+
+  // Create live outline box
+  liveBox = document.createElement("div");
+  liveBox.style.position = "absolute";
+  liveBox.style.border = "2px dashed red";
+  liveBox.style.background = "rgba(255,0,0,0.1)";
+  liveBox.style.pointerEvents = "none";
+  overlay.appendChild(liveBox);
+};
+
+canv.onmousemove = e => {
+  if (!drawing || !liveBox) return;
+
+  const r = canv.getBoundingClientRect();
+  const currX = (e.clientX - r.left) / zoom;
+  const currY = (e.clientY - r.top) / zoom;
+
+  const x = Math.min(startX, currX);
+  const y = Math.min(startY, currY);
+  const w = Math.abs(currX - startX);
+  const h = Math.abs(currY - startY);
+
+  liveBox.style.left = (x * zoom) + "px";
+  liveBox.style.top = (y * zoom) + "px";
+  liveBox.style.width = (w * zoom) + "px";
+  liveBox.style.height = (h * zoom) + "px";
 };
 
 canv.onmouseup = e => {
@@ -199,11 +227,17 @@ canv.onmouseup = e => {
   drawing = false;
 
   const r = canv.getBoundingClientRect();
-  const endX = e.clientX - r.left;
-  const endY = e.clientY - r.top;
+  const endX = (e.clientX - r.left) / zoom;
+  const endY = (e.clientY - r.top) / zoom;
 
   const width = Math.abs(endX - startX);
   const height = Math.abs(endY - startY);
+
+  // Remove live outline
+  if (liveBox) {
+    overlay.removeChild(liveBox);
+    liveBox = null;
+  }
 
   if (width < 5 || height < 5) return;
 
