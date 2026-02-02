@@ -128,14 +128,33 @@ def get_page(filename, p):
 
 
 # ------------------------------------------------------------
-# SUGGESTIONS (AI + OCR FLAG)
+# SUGGESTIONS (AI + OCR FLAG + CONFIDENCE FILTER)
 # ------------------------------------------------------------
 @redactor_bp.route("/suggestions/<filename>")
 def suggestions(filename):
+    """
+    Return AI suggestions for a PDF.
+
+    Query params:
+      ?ocr=0|1           -> enable OCR fusion into spaCy text
+      ?min_conf=0.0-1.0  -> filter YOLO suggestions by confidence
+    """
     pdf_path = os.path.join(current_app.config["UPLOAD_FOLDER"], filename)
+
     ocr_flag = request.args.get("ocr", "0")
     use_ocr = ocr_flag == "1"
-    sugg = extract_suggestions(pdf_path, use_ocr=use_ocr)
+
+    min_conf_str = request.args.get("min_conf", "").strip()
+    try:
+        min_conf = float(min_conf_str) if min_conf_str else 0.0
+    except ValueError:
+        min_conf = 0.0
+
+    sugg = extract_suggestions(
+        pdf_path,
+        use_ocr=use_ocr,
+        min_conf=min_conf,
+    )
     return api_ok(suggestions=sugg)
 
 
@@ -542,3 +561,84 @@ def template_apply():
         conn.commit()
 
     return api_ok(message="Template applied")
+
+
+@redactor_bp.route("/template/load/<int:template_id>")
+def template_load(template_id):
+    """
+    Load a template's boxes for editing.
+    """
+    with get_conn() as conn:
+        ensure_templates_table(conn)
+        row = conn.execute(
+            "SELECT boxes_json FROM redaction_templates WHERE id=?",
+            (template_id,),
+        ).fetchone()
+
+    if not row:
+        return api_error("Template not found")
+
+    try:
+        boxes = json.loads(row["boxes_json"])
+    except Exception:
+        return api_error("Invalid template data")
+
+    return api_ok(boxes=boxes)
+
+
+@redactor_bp.route("/template/update", methods=["POST"])
+def template_update():
+    """
+    Overwrite an existing template with the current preview boxes.
+    JSON body:
+      {
+        "template_id": 1,
+        "filename": "redaction_1234.pdf"
+      }
+    """
+    data = request.json or {}
+    template_id = data.get("template_id")
+    filename = data.get("filename")
+
+    if not template_id or not filename:
+        return api_error("template_id and filename required")
+
+    with get_conn() as conn:
+        ensure_preview_table(conn)
+        ensure_templates_table(conn)
+
+        rows = conn.execute(
+            """
+            SELECT page, x, y, width, height, type, text
+            FROM redaction_preview
+            WHERE filename=?
+            ORDER BY id ASC
+            """,
+            (filename,),
+        ).fetchall()
+
+        boxes = [
+            {
+                "page": r["page"],
+                "x": r["x"],
+                "y": r["y"],
+                "width": r["width"],
+                "height": r["height"],
+                "type": r["type"],
+                "text": r["text"],
+            }
+            for r in rows
+        ]
+
+        if not boxes:
+            return api_error("No preview boxes to save")
+
+        boxes_json = json.dumps(boxes)
+
+        conn.execute(
+            "UPDATE redaction_templates SET boxes_json=? WHERE id=?",
+            (boxes_json, template_id),
+        )
+        conn.commit()
+
+    return api_ok(message="Template updated")
