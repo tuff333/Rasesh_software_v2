@@ -253,7 +253,6 @@ def init_db():
             )
         """)
 
-        # MIGRATE missing columns
         existing_redaction_cols = {
             row[1] for row in c.execute("PRAGMA table_info(redactions);").fetchall()
         }
@@ -278,6 +277,23 @@ def init_db():
                 doc_type TEXT,
                 boxes_json TEXT NOT NULL,
                 created_at TEXT
+            )
+        """)
+
+        # -------------------------
+        # REDACTION TEMPLATE VERSIONS (NEW)
+        # -------------------------
+        c.execute("""
+            CREATE TABLE IF NOT EXISTS redaction_template_versions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                template_id INTEGER NOT NULL,
+                version INTEGER NOT NULL,
+                name TEXT,
+                company TEXT,
+                doc_type TEXT,
+                boxes_json TEXT NOT NULL,
+                created_at TEXT,
+                FOREIGN KEY(template_id) REFERENCES redaction_templates(id)
             )
         """)
 
