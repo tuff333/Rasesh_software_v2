@@ -1,5 +1,5 @@
 /* ============================================================
-   REDACTOR FRONTEND — PHASE 5
+   REDACTOR FRONTEND — PHASE 5+
    - Preview Mode (DB-backed)
    - AI Suggestions with bounding boxes
    - Undo / Clear / Apply Preview
@@ -10,7 +10,15 @@
    - Multi-page preview
    - Viewer tips
    - Keyboard shortcuts (from settings)
-   - Redaction templates (save/load/edit/apply)
+   - Redaction templates:
+       * Save / Apply
+       * Load for editing
+       * Overwrite
+       * Preview thumbnail
+       * Auto-detect company/doc_type
+       * Version listing
+       * Export / Import
+       * Duplicate / Rename
    ============================================================ */
 
 let filename = window.filename || '{{ filename }}';
@@ -40,11 +48,9 @@ let tipsTimer = null;
    ============================================================ */
 
 function applySettingsToUI(s) {
-  // OCR default
   const ocrToggle = document.getElementById("ocrToggle");
   if (ocrToggle) ocrToggle.checked = !!s.ocr_default;
 
-  // Sidebar collapsed (optional)
   if (s.sidebar_collapsed) {
     document.getElementById("thumbSidebar")?.classList.add("thumb-collapsed");
   }
@@ -184,10 +190,10 @@ if (pageJumpGo && pageJumpInput) {
 }
 
 /* ============================================================
-   DRAW AREA REDACTION (Preview Mode) — WITH LIVE OUTLINE
+   DRAW AREA REDACTION — WITH LIVE OUTLINE
    ============================================================ */
 
-let liveBox = null;   // temporary red outline div
+let liveBox = null;
 
 canv.onmousedown = e => {
   const r = canv.getBoundingClientRect();
@@ -195,7 +201,6 @@ canv.onmousedown = e => {
   startX = (e.clientX - r.left) / zoom;
   startY = (e.clientY - r.top) / zoom;
 
-  // Create live outline box
   liveBox = document.createElement("div");
   liveBox.style.position = "absolute";
   liveBox.style.border = "2px dashed red";
@@ -233,7 +238,6 @@ canv.onmouseup = e => {
   const width = Math.abs(endX - startX);
   const height = Math.abs(endY - startY);
 
-  // Remove live outline
   if (liveBox) {
     overlay.removeChild(liveBox);
     liveBox = null;
@@ -353,7 +357,7 @@ document.getElementById('applyPreview').onclick = () => {
 };
 
 /* ============================================================
-   AI SUGGESTIONS (with bounding boxes + OCR flag)
+   AI SUGGESTIONS
    ============================================================ */
 
 function loadSuggestions() {
@@ -371,7 +375,6 @@ function loadSuggestions() {
         btn.textContent = `${s.label}: ${s.text}`;
 
         btn.onclick = () => {
-          // If bbox present → area; else text-based
           if (s.bbox && s.bbox.length === 4) {
             const b = {
               type: 'area',
@@ -417,6 +420,7 @@ function loadWorkspace() {
 
 function renderWorkspace(docs) {
   const list = document.getElementById('docList');
+  if (!list) return;
   list.innerHTML = '';
 
   docs.forEach(doc => {
@@ -481,6 +485,7 @@ function openCurrentDocument() {
 
 function loadThumbnails() {
   const list = document.getElementById('thumbList');
+  if (!list) return;
   list.innerHTML = '';
 
   for (let p = 0; p < pageCount; p++) {
@@ -501,13 +506,19 @@ function highlightThumbnail() {
   });
 }
 
-document.getElementById('thumbToggle').onclick = () => {
-  document.getElementById('thumbSidebar').classList.toggle('thumb-collapsed');
-};
+const thumbToggle = document.getElementById('thumbToggle');
+if (thumbToggle) {
+  thumbToggle.onclick = () => {
+    document.getElementById('thumbSidebar').classList.toggle('thumb-collapsed');
+  };
+}
 
-document.getElementById('ocrToggle').onchange = () => {
-  loadSuggestions();
-};
+const ocrToggle = document.getElementById('ocrToggle');
+if (ocrToggle) {
+  ocrToggle.onchange = () => {
+    loadSuggestions();
+  };
+}
 
 /* ============================================================
    ZOOM CONTROLS
@@ -535,24 +546,30 @@ document.getElementById('zoomReset').onclick = () => {
   applyZoom();
 };
 
-document.getElementById('zoomFitWidth').onclick = () => {
-  const viewerWidth = document.getElementById('viewer').clientWidth;
-  if (baseWidth > 0) {
-    zoom = viewerWidth / baseWidth;
-    applyZoom();
-  }
-};
+const zoomFitWidthBtn = document.getElementById('zoomFitWidth');
+if (zoomFitWidthBtn) {
+  zoomFitWidthBtn.onclick = () => {
+    const viewerWidth = document.getElementById('viewer').clientWidth;
+    if (baseWidth > 0) {
+      zoom = viewerWidth / baseWidth;
+      applyZoom();
+    }
+  };
+}
 
-document.getElementById('zoomFitPage').onclick = () => {
-  const viewer = document.getElementById('viewer');
-  if (baseWidth > 0 && baseHeight > 0) {
-    zoom = Math.min(
-      viewer.clientWidth / baseWidth,
-      viewer.clientHeight / baseHeight
-    );
-    applyZoom();
-  }
-};
+const zoomFitPageBtn = document.getElementById('zoomFitPage');
+if (zoomFitPageBtn) {
+  zoomFitPageBtn.onclick = () => {
+    const viewer = document.getElementById('viewer');
+    if (baseWidth > 0 && baseHeight > 0) {
+      zoom = Math.min(
+        viewer.clientWidth / baseWidth,
+        viewer.clientHeight / baseHeight
+      );
+      applyZoom();
+    }
+  };
+}
 
 document.getElementById('viewer').addEventListener('wheel', e => {
   if (!e.ctrlKey) return;
@@ -678,14 +695,17 @@ document.addEventListener('keydown', function (e) {
 
   if (matchShortcut(e, sc.toggle_thumbs)) {
     e.preventDefault();
-    document.getElementById('thumbToggle').click();
+    const tt = document.getElementById('thumbToggle');
+    if (tt) tt.click();
   }
 
   if (matchShortcut(e, sc.toggle_ocr)) {
     e.preventDefault();
     const ocr = document.getElementById('ocrToggle');
-    ocr.checked = !ocr.checked;
-    loadSuggestions();
+    if (ocr) {
+      ocr.checked = !ocr.checked;
+      loadSuggestions();
+    }
   }
 });
 
@@ -694,7 +714,6 @@ document.addEventListener('keydown', function (e) {
    ============================================================ */
 
 function loadTemplates() {
-  // For now, no company/doc_type filter (can be added later)
   fetch('/redactor/template/list')
     .then(r => r.json())
     .then(d => {
@@ -711,15 +730,32 @@ function loadTemplates() {
         opt.textContent = label;
         sel.appendChild(opt);
       });
+
+      updateTemplatePreview();
     });
 }
 
-function saveTemplate() {
+function autoDetectTemplateMeta() {
+  return fetch(`/redactor/template/auto_detect/${filename}`)
+    .then(r => r.json())
+    .then(d => {
+      if (!d.success) return { company: "", doc_type: "" };
+      return {
+        company: d.company || "",
+        doc_type: d.doc_type || ""
+      };
+    })
+    .catch(() => ({ company: "", doc_type: "" }));
+}
+
+async function saveTemplate() {
+  const meta = await autoDetectTemplateMeta();
+
   const name = prompt("Template name:");
   if (!name) return;
 
-  const company = prompt("Company (optional, e.g. Amazon):") || "";
-  const docType = prompt("Document type (optional, e.g. Invoice):") || "";
+  const company = prompt("Company (optional, e.g. Amazon):", meta.company || "") || "";
+  const docType = prompt("Document type (optional, e.g. Invoice):", meta.doc_type || "") || "";
 
   fetch('/redactor/template/save', {
     method: 'POST',
@@ -776,7 +812,6 @@ function applyTemplate(mode) {
         alert("Failed to apply template: " + (d.error || "Unknown error"));
         return;
       }
-      // Reload preview boxes from DB
       loadPreview();
     });
 }
@@ -867,4 +902,233 @@ if (loadTemplateBtn) {
 const overwriteTemplateBtn = document.getElementById('overwriteTemplateBtn');
 if (overwriteTemplateBtn) {
   overwriteTemplateBtn.onclick = () => overwriteTemplate();
+}
+
+/* ============================================================
+   REDACTION TEMPLATES — PREVIEW THUMBNAIL
+   ============================================================ */
+
+function updateTemplatePreview() {
+  const sel = document.getElementById('templateSelect');
+  const img = document.getElementById('templatePreviewImg');
+  const overlayDiv = document.getElementById('templatePreviewOverlay');
+  if (!sel || !img || !overlayDiv) return;
+
+  overlayDiv.innerHTML = '';
+
+  if (!sel.value) {
+    img.style.display = 'none';
+    img.src = '';
+    return;
+  }
+
+  img.src = `/redactor/thumbnail/${filename}/0`;
+  img.onload = () => {
+    img.style.display = 'block';
+
+    const templateId = parseInt(sel.value, 10);
+    if (!templateId) return;
+
+    fetch(`/redactor/template/load/${templateId}`)
+      .then(r => r.json())
+      .then(d => {
+        if (!d.success) return;
+        const boxes = d.boxes || [];
+        overlayDiv.innerHTML = '';
+
+        const w = img.clientWidth;
+        const h = img.clientHeight;
+
+        boxes.forEach(b => {
+          if (b.page && b.page !== 0) return;
+
+          const box = document.createElement('div');
+          box.style.position = 'absolute';
+          box.style.border = '1px solid #27AAE1';
+          box.style.background = 'rgba(39,170,225,0.25)';
+          box.style.left = (b.x * w) + 'px';
+          box.style.top = (b.y * h) + 'px';
+          box.style.width = (b.width * w) + 'px';
+          box.style.height = (b.height * h) + 'px';
+          overlayDiv.appendChild(box);
+        });
+      });
+  };
+}
+
+const templateSelect = document.getElementById('templateSelect');
+if (templateSelect) {
+  templateSelect.onchange = () => updateTemplatePreview();
+}
+
+/* ============================================================
+   REDACTION TEMPLATES — VERSIONS / EXPORT / IMPORT / DUPLICATE / RENAME
+   ============================================================ */
+
+function viewTemplateVersions() {
+  const sel = document.getElementById('templateSelect');
+  if (!sel || !sel.value) {
+    alert("Select a template first.");
+    return;
+  }
+
+  const templateId = parseInt(sel.value, 10);
+  if (!templateId) {
+    alert("Invalid template.");
+    return;
+  }
+
+  fetch(`/redactor/template/versions/${templateId}`)
+    .then(r => r.json())
+    .then(d => {
+      if (!d.success) {
+        alert("Failed to load versions: " + (d.error || "Unknown error"));
+        return;
+      }
+
+      const versions = d.versions || [];
+      if (!versions.length) {
+        alert("No versions recorded yet.");
+        return;
+      }
+
+      const lines = versions.map(v => `v${v.version} — ${v.created_at}`);
+      alert("Template versions:\n\n" + lines.join("\n"));
+    });
+}
+
+function exportTemplate() {
+  const sel = document.getElementById('templateSelect');
+  if (!sel || !sel.value) {
+    alert("Select a template first.");
+    return;
+  }
+
+  const templateId = parseInt(sel.value, 10);
+  if (!templateId) {
+    alert("Invalid template.");
+    return;
+  }
+
+  window.location.href = `/redactor/template/export/${templateId}`;
+}
+
+function importTemplateFromFile(file) {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  fetch('/redactor/template/import', {
+    method: 'POST',
+    body: formData
+  })
+    .then(r => r.json())
+    .then(d => {
+      if (!d.success) {
+        alert("Failed to import template: " + (d.error || "Unknown error"));
+        return;
+      }
+      alert("Template imported.");
+      loadTemplates();
+    });
+}
+
+function duplicateTemplate() {
+  const sel = document.getElementById('templateSelect');
+  if (!sel || !sel.value) {
+    alert("Select a template first.");
+    return;
+  }
+
+  const templateId = parseInt(sel.value, 10);
+  if (!templateId) {
+    alert("Invalid template.");
+    return;
+  }
+
+  const newName = prompt("New name for duplicated template:");
+  if (!newName) return;
+
+  fetch('/redactor/template/duplicate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      template_id: templateId,
+      new_name: newName
+    })
+  })
+    .then(r => r.json())
+    .then(d => {
+      if (!d.success) {
+        alert("Failed to duplicate template: " + (d.error || "Unknown error"));
+        return;
+      }
+      alert("Template duplicated.");
+      loadTemplates();
+    });
+}
+
+function renameTemplate() {
+  const sel = document.getElementById('templateSelect');
+  if (!sel || !sel.value) {
+    alert("Select a template first.");
+    return;
+  }
+
+  const templateId = parseInt(sel.value, 10);
+  if (!templateId) {
+    alert("Invalid template.");
+    return;
+  }
+
+  const newName = prompt("New template name:");
+  if (!newName) return;
+
+  fetch('/redactor/template/rename', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      template_id: templateId,
+      new_name: newName
+    })
+  })
+    .then(r => r.json())
+    .then(d => {
+      if (!d.success) {
+        alert("Failed to rename template: " + (d.error || "Unknown error"));
+        return;
+      }
+      alert("Template renamed.");
+      loadTemplates();
+    });
+}
+
+const viewTemplateVersionsBtn = document.getElementById('viewTemplateVersionsBtn');
+if (viewTemplateVersionsBtn) {
+  viewTemplateVersionsBtn.onclick = () => viewTemplateVersions();
+}
+
+const exportTemplateBtn = document.getElementById('exportTemplateBtn');
+if (exportTemplateBtn) {
+  exportTemplateBtn.onclick = () => exportTemplate();
+}
+
+const importTemplateBtn = document.getElementById('importTemplateBtn');
+const importTemplateFile = document.getElementById('importTemplateFile');
+if (importTemplateBtn && importTemplateFile) {
+  importTemplateBtn.onclick = () => importTemplateFile.click();
+  importTemplateFile.onchange = e => {
+    const file = e.target.files[0];
+    if (file) importTemplateFromFile(file);
+    e.target.value = '';
+  };
+}
+
+const duplicateTemplateBtn = document.getElementById('duplicateTemplateBtn');
+if (duplicateTemplateBtn) {
+  duplicateTemplateBtn.onclick = () => duplicateTemplate();
+}
+
+const renameTemplateBtn = document.getElementById('renameTemplateBtn');
+if (renameTemplateBtn) {
+  renameTemplateBtn.onclick = () => renameTemplate();
 }
