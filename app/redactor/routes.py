@@ -2,6 +2,7 @@ import os
 import sqlite3
 import json
 import fitz
+from io import BytesIO
 from datetime import datetime
 from flask import (
     request,
@@ -59,6 +60,24 @@ def ensure_templates_table(conn):
         CREATE TABLE IF NOT EXISTS redaction_templates (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
+            company TEXT,
+            doc_type TEXT,
+            boxes_json TEXT NOT NULL,
+            created_at TEXT
+        )
+        """
+    )
+
+
+def ensure_template_versions_table(conn):
+    """Ensure the redaction_template_versions table exists."""
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS redaction_template_versions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            template_id INTEGER NOT NULL,
+            version INTEGER NOT NULL,
+            name TEXT,
             company TEXT,
             doc_type TEXT,
             boxes_json TEXT NOT NULL,
@@ -366,7 +385,7 @@ def workspace_open():
 
 
 # ------------------------------------------------------------
-# REDACTION TEMPLATES
+# REDACTION TEMPLATES — BASE
 # ------------------------------------------------------------
 @redactor_bp.route("/template/save", methods=["POST"])
 def template_save():
@@ -392,6 +411,7 @@ def template_save():
     with get_conn() as conn:
         ensure_preview_table(conn)
         ensure_templates_table(conn)
+        ensure_template_versions_table(conn)
 
         rows = conn.execute(
             """
@@ -422,13 +442,25 @@ def template_save():
         boxes_json = json.dumps(boxes)
         ts = datetime.now().isoformat(timespec="seconds")
 
-        conn.execute(
+        cur = conn.execute(
             """
             INSERT INTO redaction_templates (name, company, doc_type, boxes_json, created_at)
             VALUES (?,?,?,?,?)
             """,
             (name, company, doc_type, boxes_json, ts),
         )
+        template_id = cur.lastrowid
+
+        # initial version 1
+        conn.execute(
+            """
+            INSERT INTO redaction_template_versions
+                (template_id, version, name, company, doc_type, boxes_json, created_at)
+            VALUES (?,?,?,?,?,?,?)
+            """,
+            (template_id, 1, name, company, doc_type, boxes_json, ts),
+        )
+
         conn.commit()
 
     return api_ok(message="Template saved")
@@ -517,7 +549,6 @@ def template_apply():
         new_boxes = []
 
         if mode == "all":
-            # Apply boxes exactly as stored (respect original pages)
             for b in boxes:
                 new_boxes.append(
                     (
@@ -532,7 +563,6 @@ def template_apply():
                     )
                 )
         else:
-            # mode == "page": apply all boxes to the given page
             for b in boxes:
                 new_boxes.append(
                     (
@@ -606,7 +636,42 @@ def template_update():
     with get_conn() as conn:
         ensure_preview_table(conn)
         ensure_templates_table(conn)
+        ensure_template_versions_table(conn)
 
+        # current template (for versioning)
+        cur_tpl = conn.execute(
+            "SELECT name, company, doc_type, boxes_json, created_at FROM redaction_templates WHERE id=?",
+            (template_id,),
+        ).fetchone()
+        if not cur_tpl:
+            return api_error("Template not found")
+
+        # compute next version
+        row_ver = conn.execute(
+            "SELECT MAX(version) AS v FROM redaction_template_versions WHERE template_id=?",
+            (template_id,),
+        ).fetchone()
+        next_version = (row_ver["v"] or 1) + 1
+
+        # store old version
+        conn.execute(
+            """
+            INSERT INTO redaction_template_versions
+                (template_id, version, name, company, doc_type, boxes_json, created_at)
+            VALUES (?,?,?,?,?,?,?)
+            """,
+            (
+                template_id,
+                next_version,
+                cur_tpl["name"],
+                cur_tpl["company"],
+                cur_tpl["doc_type"],
+                cur_tpl["boxes_json"],
+                cur_tpl["created_at"],
+            ),
+        )
+
+        # now overwrite with current preview
         rows = conn.execute(
             """
             SELECT page, x, y, width, height, type, text
@@ -634,11 +699,275 @@ def template_update():
             return api_error("No preview boxes to save")
 
         boxes_json = json.dumps(boxes)
+        ts = datetime.now().isoformat(timespec="seconds")
 
         conn.execute(
-            "UPDATE redaction_templates SET boxes_json=? WHERE id=?",
-            (boxes_json, template_id),
+            "UPDATE redaction_templates SET boxes_json=?, created_at=? WHERE id=?",
+            (boxes_json, ts, template_id),
         )
         conn.commit()
 
     return api_ok(message="Template updated")
+
+
+# ------------------------------------------------------------
+# REDACTION TEMPLATES — AUTO-DETECT COMPANY/DOC TYPE
+# ------------------------------------------------------------
+@redactor_bp.route("/template/auto_detect/<filename>")
+def template_auto_detect(filename):
+    """
+    Simple heuristic to auto-detect company and doc_type from PDF text.
+    """
+    pdf_path = os.path.join(current_app.config["UPLOAD_FOLDER"], filename)
+    if not os.path.exists(pdf_path):
+        return api_error("File not found")
+
+    try:
+        doc = fitz.open(pdf_path)
+        text = ""
+        if doc.page_count > 0:
+            text = doc[0].get_text()[:5000]
+        doc.close()
+    except Exception as e:
+        return api_error(str(e))
+
+    text_lower = text.lower()
+
+    company = ""
+    doc_type = ""
+
+    # naive company detection
+    known_companies = ["amazon", "ups", "fedex", "dhl", "walmart", "costco", "google", "microsoft"]
+    for c in known_companies:
+        if c in text_lower:
+            company = c.capitalize()
+            break
+
+    # naive doc_type detection
+    if "invoice" in text_lower:
+        doc_type = "Invoice"
+    elif "statement" in text_lower:
+        doc_type = "Statement"
+    elif "receipt" in text_lower:
+        doc_type = "Receipt"
+    elif "bill of lading" in text_lower:
+        doc_type = "Bill of Lading"
+
+    return api_ok(company=company, doc_type=doc_type)
+
+
+# ------------------------------------------------------------
+# REDACTION TEMPLATES — VERSIONS
+# ------------------------------------------------------------
+@redactor_bp.route("/template/versions/<int:template_id>")
+def template_versions(template_id):
+    """
+    List versions for a template.
+    """
+    with get_conn() as conn:
+        ensure_template_versions_table(conn)
+        rows = conn.execute(
+            """
+            SELECT id, version, created_at
+            FROM redaction_template_versions
+            WHERE template_id=?
+            ORDER BY version DESC
+            """,
+            (template_id,),
+        ).fetchall()
+
+    versions = [
+        {
+            "id": r["id"],
+            "version": r["version"],
+            "created_at": r["created_at"],
+        }
+        for r in rows
+    ]
+
+    return api_ok(versions=versions)
+
+
+# ------------------------------------------------------------
+# REDACTION TEMPLATES — EXPORT / IMPORT
+# ------------------------------------------------------------
+@redactor_bp.route("/template/export/<int:template_id>")
+def template_export(template_id):
+    """
+    Export a template as a JSON file.
+    """
+    with get_conn() as conn:
+        ensure_templates_table(conn)
+        row = conn.execute(
+            """
+            SELECT id, name, company, doc_type, boxes_json, created_at
+            FROM redaction_templates
+            WHERE id=?
+            """,
+            (template_id,),
+        ).fetchone()
+
+    if not row:
+        return api_error("Template not found")
+
+    data = {
+        "id": row["id"],
+        "name": row["name"],
+        "company": row["company"],
+        "doc_type": row["doc_type"],
+        "boxes": json.loads(row["boxes_json"]),
+        "created_at": row["created_at"],
+    }
+
+    buf = BytesIO()
+    buf.write(json.dumps(data, indent=2).encode("utf-8"))
+    buf.seek(0)
+
+    filename = f"template_{template_id}_{row['name'].replace(' ', '_')}.json"
+    return send_file(
+        buf,
+        mimetype="application/json",
+        as_attachment=True,
+        download_name=filename,
+    )
+
+
+@redactor_bp.route("/template/import", methods=["POST"])
+def template_import():
+    """
+    Import a template from a JSON file.
+    """
+    file = request.files.get("file")
+    if not file:
+        return api_error("No file uploaded")
+
+    try:
+        data = json.loads(file.read().decode("utf-8"))
+    except Exception:
+        return api_error("Invalid JSON file")
+
+    name = data.get("name")
+    company = data.get("company")
+    doc_type = data.get("doc_type")
+    boxes = data.get("boxes")
+
+    if not name or not boxes:
+        return api_error("Template name and boxes are required")
+
+    boxes_json = json.dumps(boxes)
+    ts = datetime.now().isoformat(timespec="seconds")
+
+    with get_conn() as conn:
+        ensure_templates_table(conn)
+        ensure_template_versions_table(conn)
+
+        cur = conn.execute(
+            """
+            INSERT INTO redaction_templates (name, company, doc_type, boxes_json, created_at)
+            VALUES (?,?,?,?,?)
+            """,
+            (name, company, doc_type, boxes_json, ts),
+        )
+        template_id = cur.lastrowid
+
+        conn.execute(
+            """
+            INSERT INTO redaction_template_versions
+                (template_id, version, name, company, doc_type, boxes_json, created_at)
+            VALUES (?,?,?,?,?,?,?)
+            """,
+            (template_id, 1, name, company, doc_type, boxes_json, ts),
+        )
+
+        conn.commit()
+
+    return api_ok(message="Template imported", template_id=template_id)
+
+
+# ------------------------------------------------------------
+# REDACTION TEMPLATES — DUPLICATE / RENAME
+# ------------------------------------------------------------
+@redactor_bp.route("/template/duplicate", methods=["POST"])
+def template_duplicate():
+    """
+    Duplicate an existing template under a new name.
+    JSON body:
+      {
+        "template_id": 1,
+        "new_name": "Copy of ..."
+      }
+    """
+    data = request.json or {}
+    template_id = data.get("template_id")
+    new_name = data.get("new_name")
+
+    if not template_id or not new_name:
+        return api_error("template_id and new_name required")
+
+    with get_conn() as conn:
+        ensure_templates_table(conn)
+        ensure_template_versions_table(conn)
+
+        row = conn.execute(
+            """
+            SELECT name, company, doc_type, boxes_json
+            FROM redaction_templates
+            WHERE id=?
+            """,
+            (template_id,),
+        ).fetchone()
+
+        if not row:
+            return api_error("Template not found")
+
+        ts = datetime.now().isoformat(timespec="seconds")
+
+        cur = conn.execute(
+            """
+            INSERT INTO redaction_templates (name, company, doc_type, boxes_json, created_at)
+            VALUES (?,?,?,?,?)
+            """,
+            (new_name, row["company"], row["doc_type"], row["boxes_json"], ts),
+        )
+        new_id = cur.lastrowid
+
+        conn.execute(
+            """
+            INSERT INTO redaction_template_versions
+                (template_id, version, name, company, doc_type, boxes_json, created_at)
+            VALUES (?,?,?,?,?,?,?)
+            """,
+            (new_id, 1, new_name, row["company"], row["doc_type"], row["boxes_json"], ts),
+        )
+
+        conn.commit()
+
+    return api_ok(message="Template duplicated", template_id=new_id)
+
+
+@redactor_bp.route("/template/rename", methods=["POST"])
+def template_rename():
+    """
+    Rename an existing template.
+    JSON body:
+      {
+        "template_id": 1,
+        "new_name": "New Name"
+      }
+    """
+    data = request.json or {}
+    template_id = data.get("template_id")
+    new_name = data.get("new_name")
+
+    if not template_id or not new_name:
+        return api_error("template_id and new_name required")
+
+    with get_conn() as conn:
+        ensure_templates_table(conn)
+        conn.execute(
+            "UPDATE redaction_templates SET name=? WHERE id=?",
+            (new_name, template_id),
+        )
+        conn.commit()
+
+    return api_ok(message="Template renamed")
