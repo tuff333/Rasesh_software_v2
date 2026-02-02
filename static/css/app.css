@@ -1,5 +1,5 @@
 /* ============================================================
-   GLOBAL THEME — Document-style UI (matches invoice PDF)
+   GLOBAL THEME — CRM UI (NO REDACTOR LAYOUT HERE)
    ============================================================ */
 
 body {
@@ -14,6 +14,10 @@ h1, h2, h3, h4, h5 {
   color: #27AAE1;
   margin-bottom: 10px;
 }
+
+/* ============================================================
+   CARDS
+   ============================================================ */
 
 .card {
   background: #fff;
@@ -35,6 +39,10 @@ h1, h2, h3, h4, h5 {
 .card-body {
   padding: 20px;
 }
+
+/* ============================================================
+   TABLES
+   ============================================================ */
 
 .table {
   width: 100%;
@@ -59,6 +67,10 @@ h1, h2, h3, h4, h5 {
 .table-hover tbody tr:hover {
   background: #f0f8ff;
 }
+
+/* ============================================================
+   BUTTONS
+   ============================================================ */
 
 .btn {
   font-size: 13px;
@@ -96,7 +108,12 @@ h1, h2, h3, h4, h5 {
   color: #dc3545;
 }
 
-.form-control, .form-select {
+/* ============================================================
+   FORMS
+   ============================================================ */
+
+.form-control,
+.form-select {
   font-size: 13px;
   padding: 6px 10px;
   border-radius: 4px;
@@ -179,7 +196,7 @@ hr {
 }
 
 /* ============================================================
-   CUSTOM COMPONENTS
+   UPLOAD AREA
    ============================================================ */
 
 .upload-area {
@@ -195,58 +212,8 @@ hr {
   background: #e6f5fc;
 }
 
-.viewer-frame {
-  border: 1px solid #ccc;
-  background: #fff;
-  margin-top: 10px;
-  position: relative;
-}
-
-.viewer-tips {
-  font-size: 12px;
-  color: #555;
-}
-
-.thumb-img {
-  width: 100%;
-  margin-bottom: 8px;
-  border: 2px solid transparent;
-  cursor: pointer;
-}
-
-.active-thumb {
-  border-color: #27AAE1;
-}
-
-.preview-page {
-  position: relative;
-  margin-bottom: 20px;
-}
-
-.preview-thumb {
-  width: 100%;
-  border: 1px solid #ccc;
-}
-
-.preview-overlay-box {
-  position: absolute;
-  border: 2px solid red;
-  background: rgba(255,0,0,0.2);
-}
-
 /* ============================================================
-   FOOTER
-   ============================================================ */
-
-.footer {
-  margin-top: 40px;
-  text-align: center;
-  font-size: 12px;
-  color: #777;
-}
-
-/* ============================================================
-   REDACTOR — Upload overlay
+   UPLOAD OVERLAY
    ============================================================ */
 
 .upload-overlay {
@@ -283,59 +250,12 @@ hr {
 }
 
 /* ============================================================
-   REDACTOR — Viewer layout
+   FOOTER
    ============================================================ */
 
-#workspace {
-  display: flex;
-  gap: 10px;
-  min-height: 600px;
-}
-
-#sidebar {
-  width: 200px;
-  border-right: 1px solid #ddd;
-  padding-right: 10px;
-}
-
-#thumbSidebar {
-  width: 140px;
-  border-right: 1px solid #ddd;
-  padding: 0 10px;
-}
-
-#mainViewer {
-  flex: 1;
-  display: flex;
-  gap: 12px;
-}
-
-#viewerColumn {
-  flex: 2;
-  display: flex;
-  flex-direction: column;
-}
-
-#suggestionColumn {
-  flex: 1;
-  border-left: 1px solid #ddd;
-  padding-left: 10px;
-}
-
-#viewerToolbar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  align-items: center;
-  margin-bottom: 8px;
-}
-
-.toolbar-group {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.page-jump-input {
-  width: 70px;
+.footer {
+  margin-top: 40px;
+  text-align: center;
+  font-size: 12px;
+  color: #777;
 }

@@ -10,11 +10,12 @@
    - Multi-page preview
    - Viewer tips
    - Keyboard shortcuts (from settings)
+   - Redaction templates (save/apply)
    ============================================================ */
 
 let filename = window.filename || '{{ filename }}';
 let currentPage = 0;
-let pageCount = 1;
+let pageCount = window.pageCount || 1;
 
 let previewBoxes = [];   // Loaded from DB
 let drawing = false;
@@ -117,6 +118,7 @@ window.onload = () => {
   loadSuggestions();
   openCurrentDocument();
   setTimeout(loadThumbnails, 500);
+  loadTemplates();
 };
 
 /* ============================================================
@@ -160,7 +162,7 @@ document.getElementById('nextPage').onclick = () => {
 };
 
 /* ============================================================
-   PAGE JUMP (ADD THIS RIGHT AFTER)
+   PAGE JUMP
    ============================================================ */
 
 const pageJumpInput = document.getElementById('pageJump');
@@ -335,18 +337,33 @@ function loadSuggestions() {
         btn.textContent = `${s.label}: ${s.text}`;
 
         btn.onclick = () => {
-          const b = {
-            type: 'area',
-            page: s.page,
-            x: s.bbox[0] / canv.width,
-            y: s.bbox[1] / canv.height,
-            width: (s.bbox[2] - s.bbox[0]) / canv.width,
-            height: (s.bbox[3] - s.bbox[1]) / canv.height
-          };
-
-          previewBoxes.push(b);
-          savePreview([b]);
-          drawOverlay();
+          // If bbox present → area; else text-based
+          if (s.bbox && s.bbox.length === 4) {
+            const b = {
+              type: 'area',
+              page: s.page,
+              x: s.bbox[0] / canv.width,
+              y: s.bbox[1] / canv.height,
+              width: (s.bbox[2] - s.bbox[0]) / canv.width,
+              height: (s.bbox[3] - s.bbox[1]) / canv.height
+            };
+            previewBoxes.push(b);
+            savePreview([b]);
+            drawOverlay();
+          } else {
+            const b = {
+              type: 'text',
+              page: s.page,
+              x: 0,
+              y: 0,
+              width: 0,
+              height: 0,
+              text: s.text
+            };
+            previewBoxes.push(b);
+            savePreview([b]);
+            drawOverlay();
+          }
         };
 
         box.appendChild(btn);
@@ -637,3 +654,110 @@ document.addEventListener('keydown', function (e) {
     loadSuggestions();
   }
 });
+
+/* ============================================================
+   REDACTION TEMPLATES (SAVE / LOAD / APPLY)
+   ============================================================ */
+
+function loadTemplates() {
+  // For now, no company/doc_type filter (can be added later)
+  fetch('/redactor/template/list')
+    .then(r => r.json())
+    .then(d => {
+      const sel = document.getElementById('templateSelect');
+      if (!sel) return;
+      sel.innerHTML = '<option value="">Templates...</option>';
+
+      (d.templates || []).forEach(t => {
+        const opt = document.createElement('option');
+        opt.value = t.id;
+        let label = t.name;
+        if (t.company) label += ` [${t.company}]`;
+        if (t.doc_type) label += ` (${t.doc_type})`;
+        opt.textContent = label;
+        sel.appendChild(opt);
+      });
+    });
+}
+
+function saveTemplate() {
+  const name = prompt("Template name:");
+  if (!name) return;
+
+  const company = prompt("Company (optional, e.g. Amazon):") || "";
+  const docType = prompt("Document type (optional, e.g. Invoice):") || "";
+
+  fetch('/redactor/template/save', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      filename,
+      name,
+      company,
+      doc_type: docType
+    })
+  })
+    .then(r => r.json())
+    .then(d => {
+      if (!d.success) {
+        alert("Failed to save template: " + (d.error || "Unknown error"));
+        return;
+      }
+      alert("Template saved.");
+      loadTemplates();
+    });
+}
+
+function applyTemplate(mode) {
+  const sel = document.getElementById('templateSelect');
+  if (!sel || !sel.value) {
+    alert("Select a template first.");
+    return;
+  }
+
+  const templateId = parseInt(sel.value, 10);
+  if (!templateId) {
+    alert("Invalid template.");
+    return;
+  }
+
+  const body = {
+    filename,
+    template_id: templateId,
+    mode
+  };
+
+  if (mode === 'page') {
+    body.page = currentPage;
+  }
+
+  fetch('/redactor/template/apply', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  })
+    .then(r => r.json())
+    .then(d => {
+      if (!d.success) {
+        alert("Failed to apply template: " + (d.error || "Unknown error"));
+        return;
+      }
+      // Reload preview boxes from DB
+      loadPreview();
+    });
+}
+
+const saveTemplateBtn = document.getElementById('saveTemplateBtn');
+if (saveTemplateBtn) {
+  saveTemplateBtn.onclick = () => saveTemplate();
+}
+
+const applyTemplateAllBtn = document.getElementById('applyTemplateAllBtn');
+if (applyTemplateAllBtn) {
+  applyTemplateAllBtn.onclick = () => applyTemplate('all');
+}
+
+const applyTemplatePageBtn = document.getElementById('applyTemplatePageBtn');
+if (applyTemplatePageBtn) {
+  applyTemplatePageBtn.onclick = () => applyTemplate('page');
+}

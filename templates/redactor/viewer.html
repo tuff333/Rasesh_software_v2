@@ -3,121 +3,109 @@
 
 <div id="workspace">
 
-  <!-- Open Documents Sidebar -->
-  <div id="sidebar">
-    <h6>Open Documents</h6>
-    <div id="docList"></div>
+  <!-- LEFT SIDEBAR (TOOLS + THUMBNAILS) -->
+  <div id="leftSidebar">
+
+    <!-- Thumbnails -->
+    <div class="tool-section">
+      <h6>Pages</h6>
+      <div id="thumbList"></div>
+    </div>
+
+    <!-- Redaction Tools -->
+    <div class="tool-section">
+      <h6>Redaction</h6>
+      <button class="btn btn-sm btn-secondary w-100 mb-1" id="undoBtn">
+        <i class="bi bi-arrow-counterclockwise"></i> Undo
+      </button>
+      <button class="btn btn-sm btn-danger w-100 mb-1" id="clearBtn">
+        <i class="bi bi-trash"></i> Clear
+      </button>
+      <button class="btn btn-sm btn-info w-100 mb-1" id="previewAll">
+        <i class="bi bi-grid"></i> Preview
+      </button>
+      <button class="btn btn-sm btn-success w-100" id="applyPreview">
+        <i class="bi bi-check2-circle"></i> Apply
+      </button>
+    </div>
+
+    <!-- Templates -->
+    <div class="tool-section">
+      <h6>Templates</h6>
+      <button class="btn btn-sm btn-outline-primary w-100 mb-1" id="saveTemplateBtn">
+        <i class="bi bi-save"></i> Save Template
+      </button>
+
+      <select id="templateSelect" class="form-select form-select-sm mb-1">
+        <option value="">Templates...</option>
+      </select>
+
+      <button class="btn btn-sm btn-outline-secondary w-100 mb-1" id="applyTemplateAllBtn">
+        Apply to All Pages
+      </button>
+
+      <button class="btn btn-sm btn-outline-secondary w-100" id="applyTemplatePageBtn">
+        Apply to This Page
+      </button>
+    </div>
+
+    <!-- OCR -->
+    <div class="tool-section">
+      <h6>OCR</h6>
+      <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" id="ocrToggle">
+        <label class="form-check-label" for="ocrToggle">Enable OCR</label>
+      </div>
+    </div>
+
   </div>
 
-  <!-- Thumbnails Sidebar -->
-  <div id="thumbSidebar" class="thumb-collapsed">
-    <div class="thumb-header">
-      <span>Pages</span>
-      <button id="thumbToggle" class="btn btn-sm btn-outline-primary">☰</button>
+  <!-- CENTER VIEWER -->
+  <div id="centerViewer">
+
+    <!-- PDF Viewer Frame -->
+    <div id="viewerFrame">
+      <canvas id="pdfCanvas"></canvas>
+      <div id="overlay"></div>
     </div>
-    <div id="thumbList"></div>
+
+    <!-- BOTTOM NAVIGATION BAR -->
+    <div id="bottomBar">
+
+      <button class="btn btn-sm btn-outline-primary" id="prevPage">
+        <i class="bi bi-arrow-left"></i>
+      </button>
+
+      <span class="page-display">
+        Page <span id="pageNum">1</span> of <span id="pageCount">1</span>
+      </span>
+
+      <button class="btn btn-sm btn-outline-primary" id="nextPage">
+        <i class="bi bi-arrow-right"></i>
+      </button>
+
+      <div class="zoom-controls ms-auto">
+        <button class="btn btn-sm btn-outline-secondary" id="zoomOut">
+          <i class="bi bi-zoom-out"></i>
+        </button>
+
+        <button class="btn btn-sm btn-outline-secondary" id="zoomReset">
+          <i class="bi bi-aspect-ratio"></i>
+        </button>
+
+        <button class="btn btn-sm btn-outline-secondary" id="zoomIn">
+          <i class="bi bi-zoom-in"></i>
+        </button>
+      </div>
+
+    </div>
+
   </div>
 
-  <!-- Main Viewer -->
-  <div id="mainViewer">
-
-    <!-- LEFT: Viewer + tools -->
-    <div id="viewerColumn">
-
-      <!-- Toolbar -->
-      <div id="viewerToolbar">
-
-        <!-- Page Navigation -->
-        <div class="toolbar-group">
-          <button class="btn btn-sm btn-outline-primary" id="prevPage">
-            <i class="bi bi-arrow-left"></i>
-          </button>
-
-          <button class="btn btn-sm btn-outline-primary" id="nextPage">
-            <i class="bi bi-arrow-right"></i>
-          </button>
-
-          <span class="page-indicator">
-            Page <span id="pageNum">1</span> / <span id="pageCount">1</span>
-          </span>
-
-          <input type="number"
-                 id="pageJump"
-                 class="form-control form-control-sm page-jump-input"
-                 min="1"
-                 value="1">
-          <button class="btn btn-sm btn-outline-secondary" id="pageJumpGo">Go</button>
-        </div>
-
-        <!-- Zoom Controls -->
-        <div class="toolbar-group">
-          <button class="btn btn-sm btn-outline-secondary" id="zoomOut">
-            <i class="bi bi-zoom-out"></i>
-          </button>
-
-          <button class="btn btn-sm btn-outline-secondary" id="zoomIn">
-            <i class="bi bi-zoom-in"></i>
-          </button>
-
-          <button class="btn btn-sm btn-outline-secondary" id="zoomReset">
-            <i class="bi bi-aspect-ratio"></i>
-          </button>
-
-          <button class="btn btn-sm btn-outline-secondary" id="zoomFitWidth">
-            <i class="bi bi-arrows-expand"></i>
-          </button>
-
-          <button class="btn btn-sm btn-outline-secondary" id="zoomFitPage">
-            <i class="bi bi-fullscreen"></i>
-          </button>
-        </div>
-
-        <!-- OCR Toggle -->
-        <div class="toolbar-group">
-          <div class="form-check form-switch">
-            <input class="form-check-input" type="checkbox" id="ocrToggle">
-            <label class="form-check-label" for="ocrToggle">OCR</label>
-          </div>
-        </div>
-
-        <!-- Redaction Controls -->
-        <div class="toolbar-group">
-          <button class="btn btn-sm btn-info" id="previewAll">
-            <i class="bi bi-grid"></i> Preview
-          </button>
-
-          <button class="btn btn-sm btn-success" id="applyPreview">
-            <i class="bi bi-check2-circle"></i> Apply
-          </button>
-
-          <button class="btn btn-sm btn-secondary" id="undoBtn">
-            <i class="bi bi-arrow-counterclockwise"></i>
-          </button>
-
-          <button class="btn btn-sm btn-danger" id="clearBtn">
-            <i class="bi bi-trash"></i>
-          </button>
-        </div>
-
-      </div>
-
-      <!-- PDF Viewer -->
-      <div id="viewer" class="viewer-frame">
-        <canvas id="pdfCanvas"></canvas>
-        <div id="overlay"></div>
-      </div>
-
-      <!-- Tips -->
-      <div id="viewerTips" class="viewer-tips mt-2"></div>
-
-    </div>
-
-    <!-- RIGHT: Suggestions -->
-    <div id="suggestionColumn">
-      <h6>AI Suggestions</h6>
-      <div id="suggestions"></div>
-    </div>
-
+  <!-- RIGHT SIDEBAR (AI SUGGESTIONS) -->
+  <div id="rightSidebar">
+    <h6>AI Suggestions</h6>
+    <div id="suggestions"></div>
   </div>
 
 </div>
@@ -147,6 +135,7 @@
 
 <script>
   window.filename = "{{ filename }}";
+  window.pageCount = {{ pages }};
 </script>
 
 <script src="{{ url_for('static', filename='js/redactor.js') }}"></script>
